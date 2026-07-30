@@ -1,0 +1,80 @@
+# RSS Orbital Navigator 0.4.0
+
+Session mod for Space Engineers worlds using the Trithorne Cluster RSS configuration.
+
+## Installation
+
+Place the mod so the script path is:
+
+`RSSOrbitalNavigator/Data/Scripts/RSSOrbitalNavigator/*.cs`
+
+Include `[RSSNAV]` in the LCD, cockpit or console block name. Copy `CustomData.example.ini` into its Custom Data.
+
+## Zone-aware jump window
+
+Version 0.4.0 no longer compares Jump Drive range only with planet center-to-center distance.
+
+The estimated required jump is:
+
+`center distance - source departure offset - target arrival allowance`
+
+Defaults:
+
+- `SourceRadiusMode=Auto`: finds the nearest large planet voxel and measures the LCD/grid position from its center.
+- `TargetArrivalMode=OrbitZone`: targets a point inside the target body's RSS orbit zone.
+- `TargetSafetyMarginKm=25`: keeps the target point 25 km inside the zone edge.
+
+This is a navigation estimate. It assumes a favorable departure direction from the source body toward the target. Obstacles, gravity restrictions and the final RSS transition still need to be checked in game.
+
+### SourceRadiusMode
+
+- `Auto`: current distance from the nearest plausible planet voxel.
+- `Manual`: uses `SourceDepartureRadiusKm`.
+- `Center`: uses zero source allowance; conservative.
+- `OrbitZone`: assumes departure from the edge of the source orbit zone; optimistic.
+
+### TargetArrivalMode
+
+- `OrbitZone`: uses target orbit-zone radius minus `TargetSafetyMarginKm`.
+- `Manual`: uses `TargetArrivalRadiusKm`.
+- `Surface`: target physical radius plus the safety margin.
+- `Center`: no target allowance; most conservative.
+
+## Jump range
+
+- `JumpRangeMode=Auto`: uses `IMyGridJumpDriveSystem.GetMaxJumpDistance()` on the LCD's construct.
+- `JumpRangeMode=Manual`: uses `JumpRangeKm`.
+- `JumpRangeMode=Off`: disables jump-window calculations.
+
+## Visual alert
+
+Text-mode LCDs expose one `FontColor`, so this version changes the color of the whole LCD rather than one individual line:
+
+- white: normal monitoring;
+- yellow: window opens within `AlertLeadMinutes`;
+- green: jump window open;
+- orange: window open but receding/closing;
+- red: configuration/error state.
+
+Colors accept `R,G,B` or `#RRGGBB`.
+
+## Sound alert
+
+1. Add a Sound Block to the same construct as the LCD.
+2. Put `[RSSNAV ALERT]` in its name, for example `Bridge Sound Block [RSSNAV ALERT]`.
+3. Select a short, non-looping sound in the block terminal.
+4. Leave the block enabled and functional.
+
+The mod calls `Play()` once when the system transitions into an open, usable jump window. `SoundOnStartup=false` prevents a sound immediately after loading a save that is already inside the window. `SoundCooldownSeconds` protects against repeated threshold crossings.
+
+## Orbital clock
+
+The model uses `MyAPIGateway.Session.GameDateTime - ModelEpoch`. The tested Trithorne world uses `2081-01-01T00:00:00`.
+
+## Diagnostics
+
+`ShowDiagnostics=false` keeps the LCD compact. Set it to `true` to show model time, epoch and the favorable-alignment warning on the panel.
+
+## Repository layout
+
+The session component is split across partial class files under `Data/Scripts/RSSOrbitalNavigator` so each source file remains manageable. Space Engineers compiles all `.cs` files in that script directory together.
