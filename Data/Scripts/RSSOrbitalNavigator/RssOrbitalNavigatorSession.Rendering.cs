@@ -78,7 +78,7 @@ namespace Boquetas.RssOrbitalNavigator
             AddText(frame, Shorten(config.Title, 28), topLeft, 0.62f * unit, DashboardMuted, TextAlignment.LEFT);
             AddText(frame, Shorten(snapshot.SourceName, 8) + " > " + Shorten(snapshot.TargetName, 8),
                 topLeft + new Vector2(0f, 22f * unit), 1.02f * unit, DashboardText, TextAlignment.LEFT);
-            AddBadge(frame, alert.StatusText ?? "MONITORING",
+            AddBadge(frame, FormatBadgeText(alert.Level),
                 origin + new Vector2(size.X - margin, margin + 16f * unit), accent, unit);
             AddRectangle(frame, origin + new Vector2(size.X * 0.5f, margin + headerHeight),
                 new Vector2(contentWidth, 2f * unit), accent);
@@ -153,7 +153,7 @@ namespace Boquetas.RssOrbitalNavigator
             AddText(frame, Shorten(config.Title, 30), cursor, 0.58f * unit, DashboardMuted, TextAlignment.LEFT);
             AddText(frame, Shorten(snapshot.SourceName, 12) + " > " + Shorten(snapshot.TargetName, 12),
                 cursor + new Vector2(0f, 23f * unit), 0.92f * unit, DashboardText, TextAlignment.LEFT);
-            AddBadge(frame, alert.StatusText ?? "MONITORING",
+            AddBadge(frame, FormatBadgeText(alert.Level),
                 origin + new Vector2(size.X - margin, margin + 11f * unit), accent, unit);
 
             cursor.Y += 60f * unit;
@@ -315,12 +315,25 @@ namespace Boquetas.RssOrbitalNavigator
 
         private static void AddBadge(MySpriteDrawFrame frame, string text, Vector2 rightCenter, Color color, float unit)
         {
-            string label = Shorten((text ?? "MONITORING").ToUpperInvariant(), 18);
-            float width = Math.Max(76f, 10f + label.Length * 7f) * unit;
+            string label = text ?? "MONITORING";
+            float width = Math.Max(88f, 18f + label.Length * 9f) * unit;
             AddRectangle(frame, rightCenter - new Vector2(width * 0.5f, 0f),
                 new Vector2(width, 24f * unit), color);
             AddText(frame, label, rightCenter - new Vector2(width * 0.5f, 5f * unit),
                 0.47f * unit, DashboardBackground, TextAlignment.CENTER);
+        }
+
+        private static string FormatBadgeText(AlertLevel level)
+        {
+            if (level == AlertLevel.OpenReceding)
+                return "CLOSING";
+            if (level == AlertLevel.Open)
+                return "WINDOW OPEN";
+            if (level == AlertLevel.Soon)
+                return "OPENS SOON";
+            if (level == AlertLevel.Error)
+                return "ERROR";
+            return "MONITORING";
         }
 
         private static void DrawProgressBar(MySpriteDrawFrame frame, Vector2 topLeft, float width, float height,
