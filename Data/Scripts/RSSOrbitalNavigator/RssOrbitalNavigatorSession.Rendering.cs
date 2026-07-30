@@ -204,6 +204,10 @@ namespace Boquetas.RssOrbitalNavigator
         {
             AddText(frame, "JUMP WINDOW", topLeft + new Vector2(12f, 10f) * unit,
                 0.5f * unit, DashboardMuted, TextAlignment.LEFT);
+            if (snapshot.Closest.Found)
+                AddText(frame, "MIN " + FormatDashboardDistance(snapshot.Closest.RequiredJumpMeters),
+                    topLeft + new Vector2(width / unit - 12f, 10f) * unit,
+                    0.36f * unit, DashboardMuted, TextAlignment.RIGHT);
 
             string state;
             string detail;
