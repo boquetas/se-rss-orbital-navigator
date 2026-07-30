@@ -53,6 +53,7 @@ namespace Boquetas.RssOrbitalNavigator
             public bool SoundRequireApiValid = true;
             public bool ShowDiagnostics;
             public string Title = "RSS ORBITAL NAVIGATOR";
+            public PanelDisplayMode DisplayMode = PanelDisplayMode.Dashboard;
 
             public static PanelConfig Parse(string customData)
             {
@@ -142,6 +143,8 @@ namespace Boquetas.RssOrbitalNavigator
                         TryParseBool(value, ref config.ShowDiagnostics);
                     else if (string.Equals(key, "Title", StringComparison.OrdinalIgnoreCase) && value.Length > 0)
                         config.Title = value;
+                    else if (string.Equals(key, "DisplayMode", StringComparison.OrdinalIgnoreCase))
+                        config.DisplayMode = ParseDisplayMode(value);
                 }
 
                 config.SurfaceIndex = Math.Max(0, config.SurfaceIndex);
@@ -187,6 +190,14 @@ namespace Boquetas.RssOrbitalNavigator
                 if (string.Equals(value, "Center", StringComparison.OrdinalIgnoreCase))
                     return TargetArrivalMode.Center;
                 return TargetArrivalMode.OrbitZone;
+            }
+
+            private static PanelDisplayMode ParseDisplayMode(string value)
+            {
+                if (string.Equals(value, "Text", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(value, "Legacy", StringComparison.OrdinalIgnoreCase))
+                    return PanelDisplayMode.Text;
+                return PanelDisplayMode.Dashboard;
             }
 
             private static void TryParseInt(string value, ref int destination)

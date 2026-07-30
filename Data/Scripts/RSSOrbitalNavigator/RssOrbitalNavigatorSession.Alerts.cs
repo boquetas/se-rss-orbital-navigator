@@ -100,7 +100,7 @@ namespace Boquetas.RssOrbitalNavigator
             return provider.GetSurface(safeIndex);
         }
 
-        private static void WritePanel(TextSurface surface, PanelConfig config, Snapshot snapshot, AlertResult alert)
+        private static void WriteTextPanel(TextSurface surface, PanelConfig config, Snapshot snapshot, AlertResult alert)
         {
             surface.ContentType = ContentType.TEXT_AND_IMAGE;
             surface.Alignment = TextAlignment.LEFT;

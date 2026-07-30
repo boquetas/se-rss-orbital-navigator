@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+- Added a responsive sprite dashboard for wide cockpit surfaces and square LCDs.
+- Added per-element status colors, range utilization and jump-drive charge bars.
+- Added compact jump-window, relative-motion and closest-approach summaries.
+- Added `DisplayMode=Text` as a fallback to the detailed legacy report.
+
 ## 0.4.0
 - Added RSS orbit-zone radius and physical body radius data from the supplied `Config.xml`.
 - Jump windows now use estimated required travel distance instead of center-to-center distance alone.

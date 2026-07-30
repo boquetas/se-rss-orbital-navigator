@@ -101,6 +101,12 @@ namespace Boquetas.RssOrbitalNavigator
             Error
         }
 
+        private enum PanelDisplayMode
+        {
+            Dashboard,
+            Text
+        }
+
         private sealed class JumpInfo
         {
             public JumpRangeMode Mode;
