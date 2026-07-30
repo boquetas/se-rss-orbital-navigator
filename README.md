@@ -50,7 +50,7 @@ This is a navigation estimate. It assumes a favorable departure direction from t
 
 `DisplayMode=Dashboard` uses a responsive sprite dashboard with a dark navigation-console layout. It adapts between wide cockpit screens and square LCDs and shows the route, estimated jump, available range, jump-window timing, relative motion, drive readiness and charge.
 
-Set `DisplayMode=Text` to use the detailed legacy text report. `FontSize` applies to text mode; dashboard mode scales automatically to the surface dimensions.
+Set `DisplayMode=Text` to use the detailed legacy text report. Dashboard mode scales automatically to the surface dimensions, and `FontSize` can reduce its typography without changing the card layout. The default and dashboard maximum is `0.55`; cockpit surfaces may work better around `0.35` to `0.45`. Text mode continues to accept larger values.
 
 Dashboard status badges use these colors:
 

@@ -68,6 +68,7 @@ namespace Boquetas.RssOrbitalNavigator
             PanelConfig config, Snapshot snapshot, AlertResult alert)
         {
             float unit = Math.Min(size.X / 512f, size.Y / 288f);
+            float fontUnit = GetDashboardFontUnit(unit, config);
             float margin = 14f * unit;
             float headerHeight = 56f * unit;
             float gap = 9f * unit;
@@ -75,11 +76,11 @@ namespace Boquetas.RssOrbitalNavigator
             Vector2 topLeft = origin + new Vector2(margin, margin);
             float contentWidth = size.X - margin * 2f;
 
-            AddText(frame, Shorten(config.Title, 28), topLeft, 0.62f * unit, DashboardMuted, TextAlignment.LEFT);
+            AddText(frame, Shorten(config.Title, 28), topLeft, 0.62f * fontUnit, DashboardMuted, TextAlignment.LEFT);
             AddText(frame, Shorten(snapshot.SourceName, 8) + " > " + Shorten(snapshot.TargetName, 8),
-                topLeft + new Vector2(0f, 22f * unit), 1.02f * unit, DashboardText, TextAlignment.LEFT);
+                topLeft + new Vector2(0f, 22f * unit), 1.02f * fontUnit, DashboardText, TextAlignment.LEFT);
             AddBadge(frame, FormatBadgeText(alert.Level),
-                origin + new Vector2(size.X - margin, margin + 16f * unit), accent, unit);
+                origin + new Vector2(size.X - margin, margin + 16f * unit), accent, unit, fontUnit);
             AddRectangle(frame, origin + new Vector2(size.X * 0.5f, margin + headerHeight),
                 new Vector2(contentWidth, 2f * unit), accent);
 
@@ -92,76 +93,77 @@ namespace Boquetas.RssOrbitalNavigator
 
             AddCard(frame, left, new Vector2(leftWidth, contentHeight), unit);
             AddText(frame, "ESTIMATED JUMP", left + new Vector2(12f, 10f) * unit,
-                0.55f * unit, DashboardMuted, TextAlignment.LEFT);
+                0.55f * fontUnit, DashboardMuted, TextAlignment.LEFT);
             AddText(frame, FormatDashboardDistance(snapshot.RequiredJumpMeters), left + new Vector2(12f, 31f) * unit,
-                1.28f * unit, DashboardText, TextAlignment.LEFT);
+                1.28f * fontUnit, DashboardText, TextAlignment.LEFT);
 
             double range = snapshot.JumpInfo.RangeMeters;
             double marginMeters = range - snapshot.RequiredJumpMeters;
             string rangeLabel = range > 0.0 ? "RANGE " + FormatDashboardDistance(range) : "RANGE UNAVAILABLE";
             AddText(frame, rangeLabel, left + new Vector2(leftWidth / unit - 12f, 84f) * unit,
-                0.48f * unit, DashboardMuted, TextAlignment.RIGHT);
+                0.48f * fontUnit, DashboardMuted, TextAlignment.RIGHT);
             DrawProgressBar(frame, left + new Vector2(12f, 70f) * unit,
                 leftWidth - 24f * unit, 8f * unit,
                 range > 0.0 ? snapshot.RequiredJumpMeters / range : 0.0,
                 range > 0.0 && marginMeters >= 0.0 ? accent : DashboardDanger);
             AddText(frame, range > 0.0 ? FormatMargin(marginMeters) : "NO USABLE JUMP RANGE",
-                left + new Vector2(12f, 84f) * unit, 0.48f * unit,
+                left + new Vector2(12f, 84f) * unit, 0.48f * fontUnit,
                 range > 0.0 && marginMeters >= 0.0 ? accent : DashboardDanger, TextAlignment.LEFT);
 
             float detailTop = 111f * unit;
             AddMetric(frame, left + new Vector2(12f, detailTop / unit), "CENTER DISTANCE",
-                FormatDashboardDistance(snapshot.DistanceMeters), unit);
+                FormatDashboardDistance(snapshot.DistanceMeters), unit, fontUnit);
             AddMetric(frame, left + new Vector2(leftWidth / unit * 0.52f, detailTop / unit), "RADIAL km/min",
-                FormatMotion(snapshot), unit);
+                FormatMotion(snapshot), unit, fontUnit);
 
             float lowerTop = Math.Min(contentHeight - 48f * unit, 167f * unit);
             AddText(frame, "NEXT CLOSEST", left + new Vector2(12f, lowerTop / unit) * unit,
-                0.45f * unit, DashboardMuted, TextAlignment.LEFT);
+                0.45f * fontUnit, DashboardMuted, TextAlignment.LEFT);
             AddText(frame, snapshot.Closest.Found
                     ? FormatDashboardDistance(snapshot.Closest.RequiredJumpMeters) : "NO FORECAST",
                 left + new Vector2(12f, lowerTop / unit + 17f) * unit,
-                0.68f * unit, DashboardText, TextAlignment.LEFT);
+                0.68f * fontUnit, DashboardText, TextAlignment.LEFT);
             AddText(frame, snapshot.Closest.Found
                     ? "IN " + FormatDashboardDuration(snapshot.Closest.SecondsFromNow) : string.Empty,
                 left + new Vector2(leftWidth / unit - 12f, lowerTop / unit + 20f) * unit,
-                0.48f * unit, DashboardMuted, TextAlignment.RIGHT);
+                0.48f * fontUnit, DashboardMuted, TextAlignment.RIGHT);
 
             AddCard(frame, right, new Vector2(rightWidth, contentHeight), unit);
-            DrawWindowSummary(frame, right, rightWidth, snapshot, accent, unit);
+            DrawWindowSummary(frame, right, rightWidth, snapshot, accent, unit, fontUnit);
             DrawDriveSummary(frame, right + new Vector2(0f, contentHeight * 0.51f), rightWidth,
-                contentHeight * 0.49f, snapshot, accent, unit);
+                contentHeight * 0.49f, snapshot, accent, unit, fontUnit);
 
             AddText(frame, "UPDATED " + snapshot.SampleTime.ToString("HH:mm:ss"),
                 origin + new Vector2(size.X - margin, size.Y - margin - 4f * unit),
-                0.4f * unit, DashboardMuted, TextAlignment.RIGHT);
+                0.4f * fontUnit, DashboardMuted, TextAlignment.RIGHT);
             if (config.ShowDiagnostics)
                 AddText(frame, FormatDiagnostics(config, snapshot),
                     origin + new Vector2(margin, size.Y - margin - 4f * unit),
-                    0.34f * unit, DashboardMuted, TextAlignment.LEFT);
+                    0.34f * fontUnit, DashboardMuted, TextAlignment.LEFT);
         }
 
         private static void DrawSquareDashboard(MySpriteDrawFrame frame, Vector2 origin, Vector2 size,
             PanelConfig config, Snapshot snapshot, AlertResult alert)
         {
             float unit = Math.Min(size.X / 512f, size.Y / 512f);
+            float fontUnit = GetDashboardFontUnit(unit, config);
             float margin = 16f * unit;
             float width = size.X - margin * 2f;
             Color accent = config.ColorAlertsEnabled ? alert.FontColor : DashboardAccent;
             Vector2 cursor = origin + new Vector2(margin, margin);
 
-            AddText(frame, Shorten(config.Title, 30), cursor, 0.58f * unit, DashboardMuted, TextAlignment.LEFT);
+            AddText(frame, Shorten(config.Title, 30), cursor, 0.58f * fontUnit, DashboardMuted, TextAlignment.LEFT);
             AddText(frame, Shorten(snapshot.SourceName, 12) + " > " + Shorten(snapshot.TargetName, 12),
-                cursor + new Vector2(0f, 23f * unit), 0.92f * unit, DashboardText, TextAlignment.LEFT);
+                cursor + new Vector2(0f, 23f * unit), 0.92f * fontUnit, DashboardText, TextAlignment.LEFT);
             AddBadge(frame, FormatBadgeText(alert.Level),
-                origin + new Vector2(size.X - margin, margin + 11f * unit), accent, unit);
+                origin + new Vector2(size.X - margin, margin + 11f * unit), accent, unit, fontUnit);
 
             cursor.Y += 60f * unit;
             AddCard(frame, cursor, new Vector2(width, 116f * unit), unit);
             AddText(frame, "ESTIMATED JUMP", cursor + new Vector2(12f, 11f) * unit,
-                0.5f * unit, DashboardMuted, TextAlignment.LEFT);
+                0.5f * fontUnit, DashboardMuted, TextAlignment.LEFT);
             AddText(frame, FormatDashboardDistance(snapshot.RequiredJumpMeters), cursor + new Vector2(12f, 34f) * unit,
-                1.32f * unit, DashboardText, TextAlignment.LEFT);
+                1.32f * fontUnit, DashboardText, TextAlignment.LEFT);
 
             double range = snapshot.JumpInfo.RangeMeters;
             double marginMeters = range - snapshot.RequiredJumpMeters;
@@ -169,45 +171,45 @@ namespace Boquetas.RssOrbitalNavigator
                 range > 0.0 ? snapshot.RequiredJumpMeters / range : 0.0,
                 range > 0.0 && marginMeters >= 0.0 ? accent : DashboardDanger);
             AddText(frame, range > 0.0 ? FormatMargin(marginMeters) : "NO USABLE JUMP RANGE",
-                cursor + new Vector2(12f, 96f) * unit, 0.46f * unit,
+                cursor + new Vector2(12f, 96f) * unit, 0.46f * fontUnit,
                 range > 0.0 && marginMeters >= 0.0 ? accent : DashboardDanger, TextAlignment.LEFT);
             AddText(frame, range > 0.0 ? "RANGE " + FormatDashboardDistance(range) : string.Empty,
                 cursor + new Vector2(width / unit - 12f, 96f) * unit,
-                0.46f * unit, DashboardMuted, TextAlignment.RIGHT);
+                0.46f * fontUnit, DashboardMuted, TextAlignment.RIGHT);
 
             cursor.Y += 126f * unit;
             AddCard(frame, cursor, new Vector2(width, 66f * unit), unit);
             AddMetric(frame, cursor + new Vector2(12f, 10f) * unit, "CENTER DISTANCE",
-                FormatDashboardDistance(snapshot.DistanceMeters), unit);
+                FormatDashboardDistance(snapshot.DistanceMeters), unit, fontUnit);
             AddMetric(frame, cursor + new Vector2(width / unit * 0.52f, 10f) * unit, "RADIAL km/min",
-                FormatMotion(snapshot), unit);
+                FormatMotion(snapshot), unit, fontUnit);
 
             cursor.Y += 76f * unit;
             AddCard(frame, cursor, new Vector2(width, 92f * unit), unit);
-            DrawWindowSummary(frame, cursor, width, snapshot, accent, unit);
+            DrawWindowSummary(frame, cursor, width, snapshot, accent, unit, fontUnit);
 
             cursor.Y += 102f * unit;
             AddCard(frame, cursor, new Vector2(width, 82f * unit), unit);
-            DrawDriveSummary(frame, cursor, width, 82f * unit, snapshot, accent, unit);
+            DrawDriveSummary(frame, cursor, width, 82f * unit, snapshot, accent, unit, fontUnit);
 
             AddText(frame, "UPDATED " + snapshot.SampleTime.ToString("HH:mm:ss"),
                 origin + new Vector2(size.X - margin, size.Y - margin),
-                0.42f * unit, DashboardMuted, TextAlignment.RIGHT);
+                0.42f * fontUnit, DashboardMuted, TextAlignment.RIGHT);
             if (config.ShowDiagnostics)
                 AddText(frame, FormatDiagnostics(config, snapshot),
                     origin + new Vector2(margin, size.Y - margin),
-                    0.32f * unit, DashboardMuted, TextAlignment.LEFT);
+                    0.32f * fontUnit, DashboardMuted, TextAlignment.LEFT);
         }
 
         private static void DrawWindowSummary(MySpriteDrawFrame frame, Vector2 topLeft, float width,
-            Snapshot snapshot, Color accent, float unit)
+            Snapshot snapshot, Color accent, float unit, float fontUnit)
         {
             AddText(frame, "JUMP WINDOW", topLeft + new Vector2(12f, 10f) * unit,
-                0.5f * unit, DashboardMuted, TextAlignment.LEFT);
+                0.5f * fontUnit, DashboardMuted, TextAlignment.LEFT);
             if (snapshot.Closest.Found)
                 AddText(frame, "MIN " + FormatDashboardDistance(snapshot.Closest.RequiredJumpMeters),
                     topLeft + new Vector2(width / unit - 12f, 10f) * unit,
-                    0.36f * unit, DashboardMuted, TextAlignment.RIGHT);
+                    0.36f * fontUnit, DashboardMuted, TextAlignment.RIGHT);
 
             string state;
             string detail;
@@ -241,16 +243,16 @@ namespace Boquetas.RssOrbitalNavigator
             }
 
             AddText(frame, state, topLeft + new Vector2(12f, 34f) * unit,
-                0.68f * unit, stateColor, TextAlignment.LEFT);
+                0.68f * fontUnit, stateColor, TextAlignment.LEFT);
             AddText(frame, detail, topLeft + new Vector2(12f, 61f) * unit,
-                0.44f * unit, DashboardMuted, TextAlignment.LEFT);
+                0.44f * fontUnit, DashboardMuted, TextAlignment.LEFT);
         }
 
         private static void DrawDriveSummary(MySpriteDrawFrame frame, Vector2 topLeft, float width, float height,
-            Snapshot snapshot, Color accent, float unit)
+            Snapshot snapshot, Color accent, float unit, float fontUnit)
         {
             AddText(frame, "JUMP SYSTEM", topLeft + new Vector2(12f, 8f) * unit,
-                0.48f * unit, DashboardMuted, TextAlignment.LEFT);
+                0.48f * fontUnit, DashboardMuted, TextAlignment.LEFT);
 
             string drives;
             if (snapshot.JumpInfo.Mode == JumpRangeMode.Off)
@@ -262,7 +264,7 @@ namespace Boquetas.RssOrbitalNavigator
                     + snapshot.JumpInfo.TotalDrives.ToString(CultureInfo.InvariantCulture) + " DRIVES READY";
 
             AddText(frame, drives, topLeft + new Vector2(12f, 29f) * unit,
-                0.5f * unit, DashboardText, TextAlignment.LEFT);
+                0.5f * fontUnit, DashboardText, TextAlignment.LEFT);
 
             if (snapshot.JumpInfo.HasChargeData)
             {
@@ -271,22 +273,23 @@ namespace Boquetas.RssOrbitalNavigator
                     width - 24f * unit, 7f * unit, snapshot.JumpInfo.ChargeRatio, accent);
                 AddText(frame, (snapshot.JumpInfo.ChargeRatio * 100.0).ToString("0", CultureInfo.InvariantCulture)
                     + "% CHARGED", topLeft + new Vector2(width / unit - 12f, barY - 12f) * unit,
-                    0.4f * unit, DashboardMuted, TextAlignment.RIGHT);
+                    0.4f * fontUnit, DashboardMuted, TextAlignment.RIGHT);
             }
 
             string warning = snapshot.JumpInfo.ErrorMessage;
             if (string.IsNullOrWhiteSpace(warning))
                 warning = snapshot.Geometry.Warning;
             if (!string.IsNullOrWhiteSpace(warning))
-                AddText(frame, Shorten(warning, Math.Max(12, (int)(width / (7f * unit)))),
+                AddText(frame, Shorten(warning, Math.Max(12, (int)(width / (7f * fontUnit)))),
                     topLeft + new Vector2(12f, height / unit - 13f) * unit,
-                    0.38f * unit, DashboardDanger, TextAlignment.LEFT);
+                    0.38f * fontUnit, DashboardDanger, TextAlignment.LEFT);
         }
 
         private static void DrawErrorDashboard(MySpriteDrawFrame frame, Vector2 origin, Vector2 size,
             PanelConfig config, Snapshot snapshot, AlertResult alert)
         {
             float unit = Math.Min(size.X / 512f, size.Y / 512f);
+            float fontUnit = GetDashboardFontUnit(unit, config);
             Vector2 center = origin + size * 0.5f;
             float width = Math.Min(size.X - 32f * unit, 460f * unit);
             Color errorColor = config.ColorAlertsEnabled ? alert.FontColor : DashboardAccent;
@@ -294,13 +297,13 @@ namespace Boquetas.RssOrbitalNavigator
             AddRectangle(frame, center - new Vector2(0f, 88f * unit),
                 new Vector2(width, 4f * unit), errorColor);
             AddText(frame, Shorten(config.Title, 30), center - new Vector2(0f, 62f * unit),
-                0.58f * unit, DashboardMuted, TextAlignment.CENTER);
+                0.58f * fontUnit, DashboardMuted, TextAlignment.CENTER);
             AddText(frame, "NAVIGATION ERROR", center - new Vector2(0f, 27f * unit),
-                1.0f * unit, errorColor, TextAlignment.CENTER);
+                1.0f * fontUnit, errorColor, TextAlignment.CENTER);
             AddText(frame, Shorten(snapshot.ErrorMessage ?? "Unknown error", 52), center + new Vector2(0f, 11f * unit),
-                0.52f * unit, DashboardText, TextAlignment.CENTER);
+                0.52f * fontUnit, DashboardText, TextAlignment.CENTER);
             AddText(frame, "CHECK [RSSNAV] CUSTOM DATA", center + new Vector2(0f, 54f * unit),
-                0.46f * unit, DashboardMuted, TextAlignment.CENTER);
+                0.46f * fontUnit, DashboardMuted, TextAlignment.CENTER);
         }
 
         private static void AddCard(MySpriteDrawFrame frame, Vector2 topLeft, Vector2 size, float unit)
@@ -310,21 +313,23 @@ namespace Boquetas.RssOrbitalNavigator
                 new Vector2(3f * unit, size.Y), DashboardPanelBright);
         }
 
-        private static void AddMetric(MySpriteDrawFrame frame, Vector2 topLeft, string label, string value, float unit)
+        private static void AddMetric(MySpriteDrawFrame frame, Vector2 topLeft, string label, string value,
+            float unit, float fontUnit)
         {
-            AddText(frame, label, topLeft, 0.43f * unit, DashboardMuted, TextAlignment.LEFT);
+            AddText(frame, label, topLeft, 0.43f * fontUnit, DashboardMuted, TextAlignment.LEFT);
             AddText(frame, value, topLeft + new Vector2(0f, 19f * unit),
-                0.63f * unit, DashboardText, TextAlignment.LEFT);
+                0.63f * fontUnit, DashboardText, TextAlignment.LEFT);
         }
 
-        private static void AddBadge(MySpriteDrawFrame frame, string text, Vector2 rightCenter, Color color, float unit)
+        private static void AddBadge(MySpriteDrawFrame frame, string text, Vector2 rightCenter, Color color,
+            float unit, float fontUnit)
         {
             string label = text ?? "MONITORING";
-            float width = Math.Max(88f, 18f + label.Length * 9f) * unit;
+            float width = Math.Max(88f * unit, 18f * unit + label.Length * 9f * fontUnit);
             AddRectangle(frame, rightCenter - new Vector2(width * 0.5f, 0f),
                 new Vector2(width, 24f * unit), color);
             AddText(frame, label, rightCenter - new Vector2(width * 0.5f, 5f * unit),
-                0.47f * unit, DashboardBackground, TextAlignment.CENTER);
+                0.47f * fontUnit, DashboardBackground, TextAlignment.CENTER);
         }
 
         private static string FormatBadgeText(AlertLevel level)
@@ -364,6 +369,13 @@ namespace Boquetas.RssOrbitalNavigator
             MySprite sprite = MySprite.CreateText(text ?? string.Empty, "Monospace", color, scale, alignment);
             sprite.Position = position;
             frame.Add(sprite);
+        }
+
+        private static float GetDashboardFontUnit(float unit, PanelConfig config)
+        {
+            float scale = config.FontSize / 0.55f;
+            scale = Math.Max(0.45f, Math.Min(1f, scale));
+            return unit * scale;
         }
 
         private static string FormatMargin(double marginMeters)

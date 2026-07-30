@@ -5,6 +5,7 @@
 - Added per-element status colors, range utilization and jump-drive charge bars.
 - Added compact jump-window, relative-motion and closest-approach summaries.
 - Added `DisplayMode=Text` as a fallback to the detailed legacy report.
+- `FontSize` now adjusts dashboard typography independently of the responsive card layout.
 
 ## 0.4.0
 - Added RSS orbit-zone radius and physical body radius data from the supplied `Config.xml`.
