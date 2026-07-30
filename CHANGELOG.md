@@ -1,0 +1,21 @@
+# Changelog
+
+## 0.4.0
+- Added RSS orbit-zone radius and physical body radius data from the supplied `Config.xml`.
+- Jump windows now use estimated required travel distance instead of center-to-center distance alone.
+- Added automatic source departure offset detection from the nearest plausible planet voxel.
+- Added target arrival modes and configurable safety margin inside the target orbit-zone edge.
+- LCD now shows center distance, required jump, source offset, target allowance and minimum required jump.
+- Added whole-LCD text color alerts for normal, approaching, open, closing and error states.
+- Added optional Sound Block alert on transition into an open and usable jump window.
+- Added sound tag, cooldown, startup and API-validity settings.
+
+## 0.3.1
+- Fixed orbital phase synchronization by using `Session.GameDateTime` instead of `ElapsedPlayTime`.
+- Added configurable `ModelEpoch`; default is `2081-01-01T00:00:00`.
+- LCD now displays the model epoch and clock source.
+- Retains automatic jump-system detection from 0.3.0.
+
+## 0.3.0
+- Automatic Jump Drive detection through the grid jump system.
+- Manual and disabled jump-range modes.
