@@ -1,0 +1,20 @@
+# Space Engineers local content
+*.sbm
+*.log
+
+# Build and IDE output
+bin/
+obj/
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary packaging
+*.zip
+.bootstrap/
