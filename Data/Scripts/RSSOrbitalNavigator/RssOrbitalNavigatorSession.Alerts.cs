@@ -137,7 +137,8 @@ namespace Boquetas.RssOrbitalNavigator
                 .AppendLine(FormatDistance(snapshot.RequiredJumpMeters));
             if (snapshot.Geometry.UsesLogicalShipPosition)
             {
-                text.AppendLine("Ship trajectory: NOT MODELED");
+                text.Append("Ship trajectory: ")
+                    .AppendLine(snapshot.Geometry.HasShipTrajectory ? "ESTIMATED" : "NOT MODELED");
             }
             else
             {

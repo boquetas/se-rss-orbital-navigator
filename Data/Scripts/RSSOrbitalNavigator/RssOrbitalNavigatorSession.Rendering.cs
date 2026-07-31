@@ -125,7 +125,9 @@ namespace Boquetas.RssOrbitalNavigator
                 FormatDashboardDistance(snapshot.DistanceMeters), unit, fontUnit);
             AddMetric(frame, left + new Vector2(leftWidth / unit * 0.52f, detailTop / unit),
                 snapshot.Geometry.UsesLogicalShipPosition ? "SHIP TRAJECTORY" : "RADIAL km/min",
-                snapshot.Geometry.UsesLogicalShipPosition ? "NOT MODELED" : FormatMotion(snapshot), unit, fontUnit);
+                snapshot.Geometry.UsesLogicalShipPosition
+                    ? (snapshot.Geometry.HasShipTrajectory ? "ESTIMATED" : "NOT MODELED")
+                    : FormatMotion(snapshot), unit, fontUnit);
 
             float lowerTop = Math.Min(contentHeight - 48f * unit, 167f * unit);
             AddText(frame, "NEXT CLOSEST", left + new Vector2(12f, lowerTop / unit) * unit,
@@ -204,7 +206,9 @@ namespace Boquetas.RssOrbitalNavigator
                 FormatDashboardDistance(snapshot.DistanceMeters), unit, fontUnit);
             AddMetric(frame, cursor + new Vector2(width / unit * 0.52f, 10f) * unit,
                 snapshot.Geometry.UsesLogicalShipPosition ? "SHIP TRAJECTORY" : "RADIAL km/min",
-                snapshot.Geometry.UsesLogicalShipPosition ? "NOT MODELED" : FormatMotion(snapshot), unit, fontUnit);
+                snapshot.Geometry.UsesLogicalShipPosition
+                    ? (snapshot.Geometry.HasShipTrajectory ? "ESTIMATED" : "NOT MODELED")
+                    : FormatMotion(snapshot), unit, fontUnit);
 
             cursor.Y += 76f * unit;
             AddCard(frame, cursor, new Vector2(width, 92f * unit), unit);
