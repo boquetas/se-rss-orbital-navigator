@@ -135,18 +135,25 @@ namespace Boquetas.RssOrbitalNavigator
             text.Append("Center distance: ").AppendLine(FormatDistance(snapshot.DistanceMeters));
             text.Append(snapshot.Geometry.IsShipPositionKnown ? "Est. required:  " : "Body-route ref: ")
                 .AppendLine(FormatDistance(snapshot.RequiredJumpMeters));
-            text.Append("Motion: ");
-            if (snapshot.Status == MotionStatus.Closing)
-                text.AppendLine("CLOSING");
-            else if (snapshot.Status == MotionStatus.Receding)
-                text.AppendLine("RECEDING");
+            if (snapshot.Geometry.UsesLogicalShipPosition)
+            {
+                text.AppendLine("Ship trajectory: NOT MODELED");
+            }
             else
-                text.AppendLine("NEARLY STABLE");
+            {
+                text.Append("Motion: ");
+                if (snapshot.Status == MotionStatus.Closing)
+                    text.AppendLine("CLOSING");
+                else if (snapshot.Status == MotionStatus.Receding)
+                    text.AppendLine("RECEDING");
+                else
+                    text.AppendLine("NEARLY STABLE");
 
-            text.Append("Rate: ")
-                .Append(snapshot.RadialRateKmPerMinute >= 0 ? "+" : string.Empty)
-                .Append(snapshot.RadialRateKmPerMinute.ToString("0.00", CultureInfo.InvariantCulture))
-                .AppendLine(" km/min");
+                text.Append("Rate: ")
+                    .Append(snapshot.RadialRateKmPerMinute >= 0 ? "+" : string.Empty)
+                    .Append(snapshot.RadialRateKmPerMinute.ToString("0.00", CultureInfo.InvariantCulture))
+                    .AppendLine(" km/min");
+            }
 
             text.AppendLine();
             text.AppendLine("JUMP GEOMETRY");

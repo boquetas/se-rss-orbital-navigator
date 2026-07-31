@@ -120,10 +120,12 @@ namespace Boquetas.RssOrbitalNavigator
                     : (range > 0.0 && marginMeters >= 0.0 ? accent : DashboardDanger), TextAlignment.LEFT);
 
             float detailTop = 111f * unit;
-            AddMetric(frame, left + new Vector2(12f, detailTop / unit), "CENTER DISTANCE",
+            AddMetric(frame, left + new Vector2(12f, detailTop / unit),
+                snapshot.Geometry.UsesLogicalShipPosition ? "SHIP DISTANCE" : "CENTER DISTANCE",
                 FormatDashboardDistance(snapshot.DistanceMeters), unit, fontUnit);
-            AddMetric(frame, left + new Vector2(leftWidth / unit * 0.52f, detailTop / unit), "RADIAL km/min",
-                FormatMotion(snapshot), unit, fontUnit);
+            AddMetric(frame, left + new Vector2(leftWidth / unit * 0.52f, detailTop / unit),
+                snapshot.Geometry.UsesLogicalShipPosition ? "SHIP TRAJECTORY" : "RADIAL km/min",
+                snapshot.Geometry.UsesLogicalShipPosition ? "NOT MODELED" : FormatMotion(snapshot), unit, fontUnit);
 
             float lowerTop = Math.Min(contentHeight - 48f * unit, 167f * unit);
             AddText(frame, "NEXT CLOSEST", left + new Vector2(12f, lowerTop / unit) * unit,
@@ -197,10 +199,12 @@ namespace Boquetas.RssOrbitalNavigator
 
             cursor.Y += 126f * unit;
             AddCard(frame, cursor, new Vector2(width, 66f * unit), unit);
-            AddMetric(frame, cursor + new Vector2(12f, 10f) * unit, "CENTER DISTANCE",
+            AddMetric(frame, cursor + new Vector2(12f, 10f) * unit,
+                snapshot.Geometry.UsesLogicalShipPosition ? "SHIP DISTANCE" : "CENTER DISTANCE",
                 FormatDashboardDistance(snapshot.DistanceMeters), unit, fontUnit);
-            AddMetric(frame, cursor + new Vector2(width / unit * 0.52f, 10f) * unit, "RADIAL km/min",
-                FormatMotion(snapshot), unit, fontUnit);
+            AddMetric(frame, cursor + new Vector2(width / unit * 0.52f, 10f) * unit,
+                snapshot.Geometry.UsesLogicalShipPosition ? "SHIP TRAJECTORY" : "RADIAL km/min",
+                snapshot.Geometry.UsesLogicalShipPosition ? "NOT MODELED" : FormatMotion(snapshot), unit, fontUnit);
 
             cursor.Y += 76f * unit;
             AddCard(frame, cursor, new Vector2(width, 92f * unit), unit);
