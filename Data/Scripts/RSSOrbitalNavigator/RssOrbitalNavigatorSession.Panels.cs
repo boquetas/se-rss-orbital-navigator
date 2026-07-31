@@ -32,6 +32,11 @@ namespace Boquetas.RssOrbitalNavigator
             _cycleCache.Clear();
             _navigationPanels.Clear();
 
+            _players.Clear();
+            MyAPIGateway.Players.GetPlayers(_players);
+            if (_players.Count == 0)
+                return;
+
             MyAPIGateway.Entities.GetEntities(_entities, entity =>
                 entity is IMyCubeGrid && !entity.MarkedForClose && !entity.Closed);
 
@@ -67,6 +72,12 @@ namespace Boquetas.RssOrbitalNavigator
                         continue;
                     if (!_processedBlocks.Add(block.EntityId))
                         continue;
+
+                    ModButtonPanel buttonPanel = block as ModButtonPanel;
+                    if (buttonPanel != null && buttonPanel.CustomName != null
+                        && HasNavigationAction(buttonPanel.CustomName))
+                        RegisterNavigationButton(buttonPanel);
+
                     if (block.CustomName == null || block.CustomName.IndexOf(PanelTag, StringComparison.OrdinalIgnoreCase) < 0)
                         continue;
 
@@ -74,6 +85,8 @@ namespace Boquetas.RssOrbitalNavigator
 
                     PanelConfig config = PanelConfig.Parse(block.CustomData);
                     ApplyRouteSelection(block, config);
+                    if (!IsPlayerNearPanel(block, config.PanelUpdateRadiusKm))
+                        continue;
                     TextSurface surface = GetSurface(block, config.SurfaceIndex);
                     if (surface == null)
                         continue;
@@ -106,34 +119,33 @@ namespace Boquetas.RssOrbitalNavigator
                 }
             }
 
-            RegisterNavigationButtons();
         }
 
-        private void RegisterNavigationButtons()
+        private bool IsPlayerNearPanel(ModTerminalBlock panelBlock, double radiusKm)
         {
-            foreach (ModTerminalBlock panel in _navigationPanels.Values)
+            Vector3D panelPosition = panelBlock.GetPosition();
+            double radiusMeters = radiusKm * 1000.0;
+            double radiusSquared = radiusMeters * radiusMeters;
+            foreach (IMyPlayer player in _players)
             {
-                IMyGridTerminalSystem terminalSystem = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(panel.CubeGrid);
-                if (terminalSystem == null)
+                if (player == null)
                     continue;
-
-                _terminalBlocks.Clear();
-                terminalSystem.GetBlocks(_terminalBlocks);
-                foreach (ModTerminalBlock block in _terminalBlocks)
-                {
-                    ModButtonPanel buttonPanel = block as ModButtonPanel;
-                    if (buttonPanel == null || buttonPanel.CustomName == null
-                        || !HasNavigationAction(buttonPanel.CustomName))
-                        continue;
-                    if (_navigationButtons.ContainsKey(buttonPanel.EntityId))
-                        continue;
-
-                    Action<int> handler = button => NavigationButtonPressed(buttonPanel, button);
-                    buttonPanel.ButtonPressed += handler;
-                    _navigationButtons[buttonPanel.EntityId] = buttonPanel;
-                    _navigationButtonHandlers[buttonPanel.EntityId] = handler;
-                }
+                Vector3D playerPosition = player.GetPosition();
+                if (Vector3D.DistanceSquared(panelPosition, playerPosition) <= radiusSquared)
+                    return true;
             }
+            return false;
+        }
+
+        private void RegisterNavigationButton(ModButtonPanel buttonPanel)
+        {
+            if (_navigationButtons.ContainsKey(buttonPanel.EntityId))
+                return;
+
+            Action<int> handler = button => NavigationButtonPressed(buttonPanel, button);
+            buttonPanel.ButtonPressed += handler;
+            _navigationButtons[buttonPanel.EntityId] = buttonPanel;
+            _navigationButtonHandlers[buttonPanel.EntityId] = handler;
         }
 
         private void NavigationButtonPressed(ModButtonPanel buttonPanel, int button)

@@ -1,4 +1,4 @@
-# RSS Orbital Navigator 0.6.0
+# RSS Orbital Navigator 0.7.0
 
 Session mod for Space Engineers worlds using the Trithorne Cluster RSS configuration.
 
@@ -23,6 +23,7 @@ Defaults:
 - `NavigationMode=Auto`: uses planetary behavior near the configured source body and automatically falls back to deep-space behavior when no plausible source voxel is nearby.
 - `SourceRadiusMode=Auto`: finds the nearest large planet voxel and measures the LCD/grid position from its center.
 - `ShipForecastMinutes=30`: short-horizon ship trajectory forecast used after two RSS position samples are available.
+- `PanelUpdateRadiusKm=5`: only updates the panel when a player is within this distance; the last displayed content is retained while distant.
 - `TargetArrivalMode=OrbitZone`: targets a point inside the target body's RSS orbit zone.
 - `TargetSafetyMarginKm=25`: keeps the target point 25 km inside the zone edge.
 

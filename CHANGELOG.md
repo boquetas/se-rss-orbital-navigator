@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.7.0
+- Added player-proximity filtering for panel calculations and rendering through `PanelUpdateRadiusKm`.
+- Skips global entity scans when no players are connected.
+- Reduced empty-world panel discovery frequency.
+- Avoids unnecessary orbital prediction work for RSS logical ship-position panels.
+
 ## 0.6.0
 - Added automatic planetary/deep-space navigation mode detection.
 - Added `NavigationMode=Planetary` and `NavigationMode=DeepSpace` manual overrides.
