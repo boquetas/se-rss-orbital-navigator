@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased
+- Added automatic planetary/deep-space navigation mode detection.
+- Added `NavigationMode=Planetary` and `NavigationMode=DeepSpace` manual overrides.
+- Added effective navigation mode labels to dashboard, text, and diagnostics output.
 
 ## 0.5.0
 - Added physical Button Panel route controls for cycling source and destination bodies.

@@ -35,6 +35,7 @@ namespace Boquetas.RssOrbitalNavigator
             public double JumpRangeKm;
             public long JumpIdentityId;
             public SourceRadiusMode SourceRadiusMode = SourceRadiusMode.Auto;
+            public NavigationMode NavigationMode = NavigationMode.Auto;
             public double SourceDepartureRadiusKm;
             public TargetArrivalMode TargetArrivalMode = TargetArrivalMode.OrbitZone;
             public double TargetArrivalRadiusKm;
@@ -107,6 +108,8 @@ namespace Boquetas.RssOrbitalNavigator
                         TryParseLong(value, ref config.JumpIdentityId);
                     else if (string.Equals(key, "SourceRadiusMode", StringComparison.OrdinalIgnoreCase))
                         config.SourceRadiusMode = ParseSourceRadiusMode(value);
+                    else if (string.Equals(key, "NavigationMode", StringComparison.OrdinalIgnoreCase))
+                        config.NavigationMode = ParseNavigationMode(value);
                     else if (string.Equals(key, "SourceDepartureRadiusKm", StringComparison.OrdinalIgnoreCase))
                         TryParseDouble(value, ref config.SourceDepartureRadiusKm);
                     else if (string.Equals(key, "TargetArrivalMode", StringComparison.OrdinalIgnoreCase))
@@ -179,6 +182,18 @@ namespace Boquetas.RssOrbitalNavigator
                     || string.Equals(value, "Zone", StringComparison.OrdinalIgnoreCase))
                     return SourceRadiusMode.OrbitZone;
                 return SourceRadiusMode.Auto;
+            }
+
+            private static NavigationMode ParseNavigationMode(string value)
+            {
+                if (string.Equals(value, "Planetary", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(value, "Planet", StringComparison.OrdinalIgnoreCase))
+                    return NavigationMode.Planetary;
+                if (string.Equals(value, "DeepSpace", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(value, "Deep Space", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(value, "Deep", StringComparison.OrdinalIgnoreCase))
+                    return NavigationMode.DeepSpace;
+                return NavigationMode.Auto;
             }
 
             private static TargetArrivalMode ParseTargetArrivalMode(string value)

@@ -83,11 +83,19 @@ namespace Boquetas.RssOrbitalNavigator
             BodyDef target, PanelConfig config)
         {
             NavigationGeometry geometry = new NavigationGeometry();
+            geometry.ConfiguredNavigationMode = config.NavigationMode;
+            geometry.EffectiveNavigationMode = config.NavigationMode == NavigationMode.DeepSpace
+                ? NavigationMode.DeepSpace : NavigationMode.Planetary;
             geometry.SourceMode = config.SourceRadiusMode;
             geometry.TargetMode = config.TargetArrivalMode;
             geometry.TargetSafetyMarginMeters = config.TargetSafetyMarginKm * 1000.0;
 
-            if (config.SourceRadiusMode == SourceRadiusMode.Center)
+            if (config.NavigationMode == NavigationMode.DeepSpace)
+            {
+                geometry.SourceAllowanceMeters = 0;
+                geometry.SourceDescription = "DEEP SPACE";
+            }
+            else if (config.SourceRadiusMode == SourceRadiusMode.Center)
             {
                 geometry.SourceAllowanceMeters = 0;
                 geometry.SourceDescription = "CENTER";
@@ -116,8 +124,16 @@ namespace Boquetas.RssOrbitalNavigator
                 else
                 {
                     geometry.SourceAllowanceMeters = 0;
-                    geometry.SourceDescription = "AUTO FAILED";
-                    geometry.Warning = "Could not locate the source planet voxel near this grid; source allowance is 0 km.";
+                    if (config.NavigationMode == NavigationMode.Auto)
+                    {
+                        geometry.EffectiveNavigationMode = NavigationMode.DeepSpace;
+                        geometry.SourceDescription = "DEEP SPACE (AUTO)";
+                    }
+                    else
+                    {
+                        geometry.SourceDescription = "AUTO FAILED";
+                        geometry.Warning = "Could not locate the source planet voxel near this grid; source allowance is 0 km.";
+                    }
                 }
             }
 

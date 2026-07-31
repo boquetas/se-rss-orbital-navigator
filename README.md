@@ -20,11 +20,20 @@ The estimated required jump is:
 
 Defaults:
 
+- `NavigationMode=Auto`: uses planetary behavior near the configured source body and automatically falls back to deep-space behavior when no plausible source voxel is nearby.
 - `SourceRadiusMode=Auto`: finds the nearest large planet voxel and measures the LCD/grid position from its center.
 - `TargetArrivalMode=OrbitZone`: targets a point inside the target body's RSS orbit zone.
 - `TargetSafetyMarginKm=25`: keeps the target point 25 km inside the zone edge.
 
 This is a navigation estimate. It assumes a favorable departure direction from the source body toward the target. Obstacles, gravity restrictions and the final RSS transition still need to be checked in game.
+
+### NavigationMode
+
+- `Auto`: detects whether the grid is near a plausible source planet. Near the planet it uses the selected `SourceRadiusMode`; away from planets it uses zero source allowance without reporting a source-voxel failure.
+- `Planetary`: forces source-planet behavior. With `SourceRadiusMode=Auto`, failure to find the source voxel remains a warning and uses zero source allowance.
+- `DeepSpace`: skips source voxel detection and uses zero source allowance.
+
+The dashboard and text display show both the configured mode and the effective mode. For example, `AUTO DEEP SPACE` means automatic detection selected deep-space behavior.
 
 ### SourceRadiusMode
 

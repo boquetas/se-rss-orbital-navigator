@@ -79,7 +79,8 @@ namespace Boquetas.RssOrbitalNavigator
             AddText(frame, Shorten(config.Title, 28), topLeft, 0.62f * fontUnit, DashboardMuted, TextAlignment.LEFT);
             AddText(frame, Shorten(snapshot.SourceName, 8) + " > " + Shorten(snapshot.TargetName, 8),
                 topLeft + new Vector2(0f, 22f * unit), 1.02f * fontUnit, DashboardText, TextAlignment.LEFT);
-            AddText(frame, "SRC -/+   DST -/+", topLeft + new Vector2(0f, 48f * unit),
+            AddText(frame, FormatNavigationMode(snapshot.Geometry) + "   SRC -/+   DST -/+",
+                topLeft + new Vector2(0f, 48f * unit),
                 0.46f * fontUnit, DashboardMuted, TextAlignment.LEFT);
             AddBadge(frame, FormatBadgeText(alert.Level),
                 origin + new Vector2(size.X - margin, margin + 16f * unit), accent, unit, fontUnit);
@@ -157,7 +158,8 @@ namespace Boquetas.RssOrbitalNavigator
             AddText(frame, Shorten(config.Title, 30), cursor, 0.58f * fontUnit, DashboardMuted, TextAlignment.LEFT);
             AddText(frame, Shorten(snapshot.SourceName, 12) + " > " + Shorten(snapshot.TargetName, 12),
                 cursor + new Vector2(0f, 23f * unit), 0.92f * fontUnit, DashboardText, TextAlignment.LEFT);
-            AddText(frame, "SRC -/+   DST -/+", cursor + new Vector2(0f, 50f * unit),
+            AddText(frame, FormatNavigationMode(snapshot.Geometry) + "   SRC -/+   DST -/+",
+                cursor + new Vector2(0f, 50f * unit),
                 0.45f * fontUnit, DashboardMuted, TextAlignment.LEFT);
             AddBadge(frame, FormatBadgeText(alert.Level),
                 origin + new Vector2(size.X - margin, margin + 11f * unit), accent, unit, fontUnit);
@@ -430,7 +432,20 @@ namespace Boquetas.RssOrbitalNavigator
         private static string FormatDiagnostics(PanelConfig config, Snapshot snapshot)
         {
             return "MODEL " + FormatDuration(snapshot.ModelSeconds) + "  |  EPOCH "
-                + config.ModelEpoch.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+                + config.ModelEpoch.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
+                + "  |  NAV " + FormatNavigationMode(snapshot.Geometry);
+        }
+
+        private static string FormatNavigationMode(NavigationGeometry geometry)
+        {
+            if (geometry == null)
+                return "NAV UNKNOWN";
+
+            string effective = geometry.EffectiveNavigationMode == NavigationMode.DeepSpace
+                ? "DEEP SPACE" : "PLANETARY";
+            if (geometry.ConfiguredNavigationMode == NavigationMode.Auto)
+                return "AUTO " + effective;
+            return effective;
         }
 
         private static string Shorten(string value, int maximumLength)

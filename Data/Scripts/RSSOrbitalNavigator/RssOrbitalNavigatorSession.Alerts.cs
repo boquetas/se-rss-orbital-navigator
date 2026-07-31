@@ -146,6 +146,7 @@ namespace Boquetas.RssOrbitalNavigator
 
             text.AppendLine();
             text.AppendLine("JUMP GEOMETRY");
+            text.Append("Navigation mode: ").AppendLine(FormatNavigationMode(snapshot.Geometry));
             text.Append("Source offset: ")
                 .Append(FormatDistance(snapshot.Geometry.SourceAllowanceMeters))
                 .Append(" (").Append(snapshot.Geometry.SourceDescription).AppendLine(")");

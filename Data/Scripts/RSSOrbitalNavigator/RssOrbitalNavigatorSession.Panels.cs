@@ -83,6 +83,7 @@ namespace Boquetas.RssOrbitalNavigator
                         + jumpInfo.TotalDrives.ToString(CultureInfo.InvariantCulture) + "|"
                         + jumpInfo.ReadyDrives.ToString(CultureInfo.InvariantCulture) + "|"
                         + config.SourceRadiusMode.ToString() + "|"
+                        + config.NavigationMode.ToString() + "|"
                         + config.TargetArrivalMode.ToString() + "|"
                         + config.TargetSafetyMarginKm.ToString("0.###", CultureInfo.InvariantCulture);
 

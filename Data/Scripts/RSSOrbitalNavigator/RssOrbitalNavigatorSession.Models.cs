@@ -84,6 +84,13 @@ namespace Boquetas.RssOrbitalNavigator
             OrbitZone
         }
 
+        private enum NavigationMode
+        {
+            Auto,
+            Planetary,
+            DeepSpace
+        }
+
         private enum TargetArrivalMode
         {
             OrbitZone,
@@ -126,6 +133,8 @@ namespace Boquetas.RssOrbitalNavigator
 
         private sealed class NavigationGeometry
         {
+            public NavigationMode ConfiguredNavigationMode;
+            public NavigationMode EffectiveNavigationMode;
             public SourceRadiusMode SourceMode;
             public TargetArrivalMode TargetMode;
             public double SourceAllowanceMeters;
