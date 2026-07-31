@@ -63,7 +63,7 @@ jobs:
           package="RSSOrbitalNavigator"
           mkdir -p "dist/${package}"
           cp -R Data "dist/${package}/"
-          cp README.md CHANGELOG.md CustomData.example.ini "dist/${package}/"
+          cp README.md CHANGELOG.md CustomData.example.ini SteamWorkshopDescription.txt "dist/${package}/"
           cd dist
           zip -r "${package}-${VERSION}.zip" "$package"
 

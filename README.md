@@ -95,3 +95,5 @@ The model uses `MyAPIGateway.Session.GameDateTime - ModelEpoch`. The tested Trit
 ## Repository layout
 
 The session component is split across partial class files under `Data/Scripts/RSSOrbitalNavigator` so each source file remains manageable. Space Engineers compiles all `.cs` files in that script directory together.
+
+`SteamWorkshopDescription.txt` contains the formatted Workshop page description and should be updated with user-facing feature changes.
