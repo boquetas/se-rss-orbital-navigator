@@ -133,7 +133,8 @@ namespace Boquetas.RssOrbitalNavigator
             if (!snapshot.Geometry.IsShipPositionKnown)
                 text.AppendLine("Position: UNKNOWN (RSS logical position unavailable)");
             text.Append("Center distance: ").AppendLine(FormatDistance(snapshot.DistanceMeters));
-            text.Append("Est. required:  ").AppendLine(FormatDistance(snapshot.RequiredJumpMeters));
+            text.Append(snapshot.Geometry.IsShipPositionKnown ? "Est. required:  " : "Body-route ref: ")
+                .AppendLine(FormatDistance(snapshot.RequiredJumpMeters));
             text.Append("Motion: ");
             if (snapshot.Status == MotionStatus.Closing)
                 text.AppendLine("CLOSING");

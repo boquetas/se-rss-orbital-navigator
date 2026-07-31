@@ -105,7 +105,8 @@ namespace Boquetas.RssOrbitalNavigator
             Soon,
             Open,
             OpenReceding,
-            Error
+            Error,
+            PositionUnknown
         }
 
         private enum PanelDisplayMode

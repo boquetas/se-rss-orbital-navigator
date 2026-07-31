@@ -136,8 +136,8 @@ namespace Boquetas.RssOrbitalNavigator
 
             if (!snapshot.Geometry.IsShipPositionKnown)
             {
-                result.Level = AlertLevel.Error;
-                result.FontColor = config.ErrorColor;
+                result.Level = AlertLevel.PositionUnknown;
+                result.FontColor = config.SoonColor;
                 result.StatusText = "POSITION UNKNOWN";
 
                 PanelAlertMemory unknownMemory;

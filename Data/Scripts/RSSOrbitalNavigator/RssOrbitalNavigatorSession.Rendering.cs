@@ -95,7 +95,8 @@ namespace Boquetas.RssOrbitalNavigator
             Vector2 right = left + new Vector2(leftWidth + gap, 0f);
 
             AddCard(frame, left, new Vector2(leftWidth, contentHeight), unit);
-            AddText(frame, "ESTIMATED JUMP", left + new Vector2(12f, 10f) * unit,
+            AddText(frame, snapshot.Geometry.IsShipPositionKnown ? "ESTIMATED JUMP" : "BODY ROUTE REFERENCE",
+                left + new Vector2(12f, 10f) * unit,
                 0.55f * fontUnit, DashboardMuted, TextAlignment.LEFT);
             AddText(frame, FormatDashboardDistance(snapshot.RequiredJumpMeters), left + new Vector2(12f, 31f) * unit,
                 1.28f * fontUnit, DashboardText, TextAlignment.LEFT);
@@ -108,10 +109,14 @@ namespace Boquetas.RssOrbitalNavigator
             DrawProgressBar(frame, left + new Vector2(12f, 70f) * unit,
                 leftWidth - 24f * unit, 8f * unit,
                 range > 0.0 ? snapshot.RequiredJumpMeters / range : 0.0,
-                range > 0.0 && marginMeters >= 0.0 ? accent : DashboardDanger);
-            AddText(frame, range > 0.0 ? FormatMargin(marginMeters) : "NO USABLE JUMP RANGE",
+                !snapshot.Geometry.IsShipPositionKnown ? DashboardMuted
+                    : (range > 0.0 && marginMeters >= 0.0 ? accent : DashboardDanger));
+            AddText(frame, range > 0.0
+                    ? (snapshot.Geometry.IsShipPositionKnown ? FormatMargin(marginMeters) : "REFERENCE ONLY")
+                    : "NO USABLE JUMP RANGE",
                 left + new Vector2(12f, 84f) * unit, 0.48f * fontUnit,
-                range > 0.0 && marginMeters >= 0.0 ? accent : DashboardDanger, TextAlignment.LEFT);
+                !snapshot.Geometry.IsShipPositionKnown ? DashboardMuted
+                    : (range > 0.0 && marginMeters >= 0.0 ? accent : DashboardDanger), TextAlignment.LEFT);
 
             float detailTop = 111f * unit;
             AddMetric(frame, left + new Vector2(12f, detailTop / unit), "CENTER DISTANCE",
@@ -166,7 +171,8 @@ namespace Boquetas.RssOrbitalNavigator
 
             cursor.Y += 88f * unit;
             AddCard(frame, cursor, new Vector2(width, 116f * unit), unit);
-            AddText(frame, "ESTIMATED JUMP", cursor + new Vector2(12f, 11f) * unit,
+            AddText(frame, snapshot.Geometry.IsShipPositionKnown ? "ESTIMATED JUMP" : "BODY ROUTE REFERENCE",
+                cursor + new Vector2(12f, 11f) * unit,
                 0.5f * fontUnit, DashboardMuted, TextAlignment.LEFT);
             AddText(frame, FormatDashboardDistance(snapshot.RequiredJumpMeters), cursor + new Vector2(12f, 34f) * unit,
                 1.32f * fontUnit, DashboardText, TextAlignment.LEFT);
@@ -175,10 +181,14 @@ namespace Boquetas.RssOrbitalNavigator
             double marginMeters = range - snapshot.RequiredJumpMeters;
             DrawProgressBar(frame, cursor + new Vector2(12f, 81f) * unit, width - 24f * unit, 8f * unit,
                 range > 0.0 ? snapshot.RequiredJumpMeters / range : 0.0,
-                range > 0.0 && marginMeters >= 0.0 ? accent : DashboardDanger);
-            AddText(frame, range > 0.0 ? FormatMargin(marginMeters) : "NO USABLE JUMP RANGE",
+                !snapshot.Geometry.IsShipPositionKnown ? DashboardMuted
+                    : (range > 0.0 && marginMeters >= 0.0 ? accent : DashboardDanger));
+            AddText(frame, range > 0.0
+                    ? (snapshot.Geometry.IsShipPositionKnown ? FormatMargin(marginMeters) : "REFERENCE ONLY")
+                    : "NO USABLE JUMP RANGE",
                 cursor + new Vector2(12f, 96f) * unit, 0.46f * fontUnit,
-                range > 0.0 && marginMeters >= 0.0 ? accent : DashboardDanger, TextAlignment.LEFT);
+                !snapshot.Geometry.IsShipPositionKnown ? DashboardMuted
+                    : (range > 0.0 && marginMeters >= 0.0 ? accent : DashboardDanger), TextAlignment.LEFT);
             AddText(frame, range > 0.0 ? "RANGE " + FormatDashboardDistance(range) : string.Empty,
                 cursor + new Vector2(width / unit - 12f, 96f) * unit,
                 0.46f * fontUnit, DashboardMuted, TextAlignment.RIGHT);
@@ -224,7 +234,7 @@ namespace Boquetas.RssOrbitalNavigator
             {
                 state = "POSITION UNKNOWN";
                 detail = "BODY ROUTE ONLY - RSS POSITION REQUIRED";
-                stateColor = DashboardDanger;
+                stateColor = accent;
             }
             else if (snapshot.JumpInfo.RangeMeters <= 0.0)
             {
@@ -352,6 +362,8 @@ namespace Boquetas.RssOrbitalNavigator
                 return "WINDOW OPEN";
             if (level == AlertLevel.Soon)
                 return "OPENS SOON";
+            if (level == AlertLevel.PositionUnknown)
+                return "POSITION UNKNOWN";
             if (level == AlertLevel.Error)
                 return "ERROR";
             return "MONITORING";
