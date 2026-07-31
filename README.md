@@ -36,6 +36,7 @@ This is a navigation estimate. It assumes a favorable departure direction from t
 
 The dashboard and text display show both the configured mode and the effective mode. For example, `AUTO DEEP SPACE` means automatic detection selected deep-space behavior.
 When the RSS logical-position API is available, deep-space mode uses the ship's converted logical proxy position and performs a current ship-to-target range check. After two samples, it estimates relative required-distance movement over `ShipForecastMinutes`. If the API or target body is unavailable, it shows an amber `POSITION UNKNOWN` state, suppresses predictions and sound alerts, and labels body-to-body values as reference-only.
+In RSS-position deep-space mode, the display shows `SHIP > Target`; `SourceBody` is retained as configuration context but is not the physical departure point.
 
 ### SourceRadiusMode
 

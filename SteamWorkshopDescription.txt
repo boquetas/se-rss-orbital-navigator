@@ -93,6 +93,8 @@ In Auto mode, the mod uses the source planet voxel when the ship is near the con
 
 When the RSS logical-position API is available, deep-space mode converts the ship position into RSS proxy space and performs a current ship-to-target range check. After two samples, it estimates relative required-distance movement for the configured [code]ShipForecastMinutes[/code] horizon. If the API or target body is unavailable, it shows an amber [code]POSITION UNKNOWN[/code] state, labels body-to-body values as reference only, and suppresses unverified predictions and sound alerts.
 
+In RSS-position deep-space mode, the route header shows [code]SHIP > Target[/code]. [code]SourceBody[/code] remains configuration context but is not treated as the ship's physical departure point.
+
 Manual overrides are available:
 
 [list]

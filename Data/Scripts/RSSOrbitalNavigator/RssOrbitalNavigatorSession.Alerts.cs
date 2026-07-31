@@ -128,7 +128,10 @@ namespace Boquetas.RssOrbitalNavigator
                 return;
             }
 
-            text.Append(snapshot.SourceName).Append(" -> ").AppendLine(snapshot.TargetName);
+            if (snapshot.Geometry.UsesLogicalShipPosition)
+                text.Append("SHIP -> ").AppendLine(snapshot.TargetName);
+            else
+                text.Append(snapshot.SourceName).Append(" -> ").AppendLine(snapshot.TargetName);
             text.Append("Navigation mode: ").AppendLine(FormatNavigationMode(snapshot.Geometry));
             if (!snapshot.Geometry.IsShipPositionKnown)
                 text.AppendLine("Position: UNKNOWN (RSS logical position unavailable)");

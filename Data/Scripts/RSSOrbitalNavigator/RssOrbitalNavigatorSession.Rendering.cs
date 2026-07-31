@@ -77,9 +77,9 @@ namespace Boquetas.RssOrbitalNavigator
             float contentWidth = size.X - margin * 2f;
 
             AddText(frame, Shorten(config.Title, 28), topLeft, 0.62f * fontUnit, DashboardMuted, TextAlignment.LEFT);
-            AddText(frame, Shorten(snapshot.SourceName, 8) + " > " + Shorten(snapshot.TargetName, 8),
+            AddText(frame, FormatRouteLabel(snapshot, 8),
                 topLeft + new Vector2(0f, 22f * unit), 1.02f * fontUnit, DashboardText, TextAlignment.LEFT);
-            AddText(frame, FormatNavigationMode(snapshot.Geometry) + "   SRC -/+   DST -/+",
+            AddText(frame, FormatNavigationMode(snapshot.Geometry) + "   " + FormatControlHint(snapshot),
                 topLeft + new Vector2(0f, 48f * unit),
                 0.46f * fontUnit, DashboardMuted, TextAlignment.LEFT);
             AddBadge(frame, FormatBadgeText(alert.Level),
@@ -166,9 +166,9 @@ namespace Boquetas.RssOrbitalNavigator
             Vector2 cursor = origin + new Vector2(margin, margin);
 
             AddText(frame, Shorten(config.Title, 30), cursor, 0.58f * fontUnit, DashboardMuted, TextAlignment.LEFT);
-            AddText(frame, Shorten(snapshot.SourceName, 12) + " > " + Shorten(snapshot.TargetName, 12),
+            AddText(frame, FormatRouteLabel(snapshot, 12),
                 cursor + new Vector2(0f, 23f * unit), 0.92f * fontUnit, DashboardText, TextAlignment.LEFT);
-            AddText(frame, FormatNavigationMode(snapshot.Geometry) + "   SRC -/+   DST -/+",
+            AddText(frame, FormatNavigationMode(snapshot.Geometry) + "   " + FormatControlHint(snapshot),
                 cursor + new Vector2(0f, 50f * unit),
                 0.45f * fontUnit, DashboardMuted, TextAlignment.LEFT);
             AddBadge(frame, FormatBadgeText(alert.Level),
@@ -502,6 +502,18 @@ namespace Boquetas.RssOrbitalNavigator
             if (geometry.ConfiguredNavigationMode == NavigationMode.Auto)
                 return "AUTO " + effective;
             return effective;
+        }
+
+        private static string FormatRouteLabel(Snapshot snapshot, int nameLength)
+        {
+            if (snapshot.Geometry.UsesLogicalShipPosition)
+                return "SHIP > " + Shorten(snapshot.TargetName, nameLength);
+            return Shorten(snapshot.SourceName, nameLength) + " > " + Shorten(snapshot.TargetName, nameLength);
+        }
+
+        private static string FormatControlHint(Snapshot snapshot)
+        {
+            return snapshot.Geometry.UsesLogicalShipPosition ? "TARGET -/+" : "SRC -/+   DST -/+";
         }
 
         private static string Shorten(string value, int maximumLength)
