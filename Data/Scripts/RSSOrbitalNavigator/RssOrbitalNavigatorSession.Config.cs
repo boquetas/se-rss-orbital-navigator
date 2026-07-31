@@ -29,12 +29,14 @@ namespace Boquetas.RssOrbitalNavigator
             public int SurfaceIndex;
             public float FontSize = 0.55f;
             public double PredictionHours = 48.0;
+            public double ShipForecastMinutes = 30.0;
             public double TimeOffsetSeconds;
             public DateTime ModelEpoch = new DateTime(2081, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
             public JumpRangeMode RangeMode = JumpRangeMode.Auto;
             public double JumpRangeKm;
             public long JumpIdentityId;
             public SourceRadiusMode SourceRadiusMode = SourceRadiusMode.Auto;
+            public NavigationMode NavigationMode = NavigationMode.Auto;
             public double SourceDepartureRadiusKm;
             public TargetArrivalMode TargetArrivalMode = TargetArrivalMode.OrbitZone;
             public double TargetArrivalRadiusKm;
@@ -95,6 +97,8 @@ namespace Boquetas.RssOrbitalNavigator
                         TryParseFloat(value, ref config.FontSize);
                     else if (string.Equals(key, "PredictionHours", StringComparison.OrdinalIgnoreCase))
                         TryParseDouble(value, ref config.PredictionHours);
+                    else if (string.Equals(key, "ShipForecastMinutes", StringComparison.OrdinalIgnoreCase))
+                        TryParseDouble(value, ref config.ShipForecastMinutes);
                     else if (string.Equals(key, "TimeOffsetSeconds", StringComparison.OrdinalIgnoreCase))
                         TryParseDouble(value, ref config.TimeOffsetSeconds);
                     else if (string.Equals(key, "ModelEpoch", StringComparison.OrdinalIgnoreCase))
@@ -107,6 +111,8 @@ namespace Boquetas.RssOrbitalNavigator
                         TryParseLong(value, ref config.JumpIdentityId);
                     else if (string.Equals(key, "SourceRadiusMode", StringComparison.OrdinalIgnoreCase))
                         config.SourceRadiusMode = ParseSourceRadiusMode(value);
+                    else if (string.Equals(key, "NavigationMode", StringComparison.OrdinalIgnoreCase))
+                        config.NavigationMode = ParseNavigationMode(value);
                     else if (string.Equals(key, "SourceDepartureRadiusKm", StringComparison.OrdinalIgnoreCase))
                         TryParseDouble(value, ref config.SourceDepartureRadiusKm);
                     else if (string.Equals(key, "TargetArrivalMode", StringComparison.OrdinalIgnoreCase))
@@ -150,6 +156,7 @@ namespace Boquetas.RssOrbitalNavigator
                 config.SurfaceIndex = Math.Max(0, config.SurfaceIndex);
                 config.FontSize = Math.Max(0.1f, Math.Min(10f, config.FontSize));
                 config.PredictionHours = Math.Max(0.25, Math.Min(720.0, config.PredictionHours));
+                config.ShipForecastMinutes = Math.Max(1.0, Math.Min(720.0, config.ShipForecastMinutes));
                 config.JumpRangeKm = Math.Max(0, config.JumpRangeKm);
                 config.SourceDepartureRadiusKm = Math.Max(0, config.SourceDepartureRadiusKm);
                 config.TargetArrivalRadiusKm = Math.Max(0, config.TargetArrivalRadiusKm);
@@ -179,6 +186,18 @@ namespace Boquetas.RssOrbitalNavigator
                     || string.Equals(value, "Zone", StringComparison.OrdinalIgnoreCase))
                     return SourceRadiusMode.OrbitZone;
                 return SourceRadiusMode.Auto;
+            }
+
+            private static NavigationMode ParseNavigationMode(string value)
+            {
+                if (string.Equals(value, "Planetary", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(value, "Planet", StringComparison.OrdinalIgnoreCase))
+                    return NavigationMode.Planetary;
+                if (string.Equals(value, "DeepSpace", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(value, "Deep Space", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(value, "Deep", StringComparison.OrdinalIgnoreCase))
+                    return NavigationMode.DeepSpace;
+                return NavigationMode.Auto;
             }
 
             private static TargetArrivalMode ParseTargetArrivalMode(string value)

@@ -31,11 +31,13 @@ namespace Boquetas.RssOrbitalNavigator
 
         private readonly HashSet<IMyEntity> _entities = new HashSet<IMyEntity>();
         private readonly HashSet<IMyEntity> _largeVoxels = new HashSet<IMyEntity>();
+        private readonly HashSet<IMyEntity> _rssPlanets = new HashSet<IMyEntity>();
         private readonly List<ModTerminalBlock> _terminalBlocks = new List<ModTerminalBlock>();
         private readonly HashSet<long> _processedBlocks = new HashSet<long>();
         private readonly Dictionary<string, BodyDef> _bodies = new Dictionary<string, BodyDef>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, Snapshot> _cycleCache = new Dictionary<string, Snapshot>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<long, PanelAlertMemory> _alertMemory = new Dictionary<long, PanelAlertMemory>();
+        private readonly Dictionary<long, ShipTrajectoryMemory> _shipTrajectoryMemory = new Dictionary<long, ShipTrajectoryMemory>();
         private readonly Dictionary<long, RouteSelection> _routeSelections = new Dictionary<long, RouteSelection>();
         private readonly Dictionary<long, ModTerminalBlock> _navigationPanels = new Dictionary<long, ModTerminalBlock>();
         private readonly Dictionary<long, ModButtonPanel> _navigationButtons = new Dictionary<long, ModButtonPanel>();
@@ -48,6 +50,7 @@ namespace Boquetas.RssOrbitalNavigator
         public override void BeforeStart()
         {
             BuildCatalog();
+            LoadRssApi();
             _started = true;
             Log("Loaded v0.4.0. Zone-edge jump windows, visual alerts, and sound alerts enabled.");
         }
@@ -77,11 +80,13 @@ namespace Boquetas.RssOrbitalNavigator
             _started = false;
             _entities.Clear();
             _largeVoxels.Clear();
+            _rssPlanets.Clear();
             _terminalBlocks.Clear();
             _processedBlocks.Clear();
             _bodies.Clear();
             _cycleCache.Clear();
             _alertMemory.Clear();
+            _shipTrajectoryMemory.Clear();
             foreach (KeyValuePair<long, ModButtonPanel> entry in _navigationButtons)
             {
                 try
@@ -97,6 +102,7 @@ namespace Boquetas.RssOrbitalNavigator
             _navigationPanels.Clear();
             _routeSelections.Clear();
             _bodyNames.Clear();
+            UnloadRssApi();
         }
 
         private void BuildCatalog()

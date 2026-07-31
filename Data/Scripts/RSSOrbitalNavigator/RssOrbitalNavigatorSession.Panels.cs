@@ -27,6 +27,7 @@ namespace Boquetas.RssOrbitalNavigator
         {
             _entities.Clear();
             _largeVoxels.Clear();
+            _rssPlanets.Clear();
             _processedBlocks.Clear();
             _cycleCache.Clear();
             _navigationPanels.Clear();
@@ -41,6 +42,11 @@ namespace Boquetas.RssOrbitalNavigator
                 VoxelBase voxel = entity as VoxelBase;
                 return voxel != null && entity.WorldVolume.Radius >= 9000.0;
             });
+
+            MyAPIGateway.Entities.GetEntities(_rssPlanets, entity =>
+                entity is Sandbox.Game.Entities.MyPlanet && !entity.MarkedForClose && !entity.Closed);
+
+            RequestRssApi();
 
             foreach (IMyEntity entity in _entities)
             {
@@ -77,12 +83,14 @@ namespace Boquetas.RssOrbitalNavigator
                         + config.TimeOffsetSeconds.ToString("0.###", CultureInfo.InvariantCulture) + "|"
                         + config.ModelEpoch.Ticks.ToString(CultureInfo.InvariantCulture) + "|"
                         + config.PredictionHours.ToString("0.###", CultureInfo.InvariantCulture) + "|"
+                        + config.ShipForecastMinutes.ToString("0.###", CultureInfo.InvariantCulture) + "|"
                         + block.EntityId.ToString(CultureInfo.InvariantCulture) + "|"
                         + jumpInfo.Mode.ToString() + "|"
                         + jumpInfo.RangeMeters.ToString("0.###", CultureInfo.InvariantCulture) + "|"
                         + jumpInfo.TotalDrives.ToString(CultureInfo.InvariantCulture) + "|"
                         + jumpInfo.ReadyDrives.ToString(CultureInfo.InvariantCulture) + "|"
                         + config.SourceRadiusMode.ToString() + "|"
+                        + config.NavigationMode.ToString() + "|"
                         + config.TargetArrivalMode.ToString() + "|"
                         + config.TargetSafetyMarginKm.ToString("0.###", CultureInfo.InvariantCulture);
 

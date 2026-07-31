@@ -128,24 +128,40 @@ namespace Boquetas.RssOrbitalNavigator
                 return;
             }
 
-            text.Append(snapshot.SourceName).Append(" -> ").AppendLine(snapshot.TargetName);
-            text.Append("Center distance: ").AppendLine(FormatDistance(snapshot.DistanceMeters));
-            text.Append("Est. required:  ").AppendLine(FormatDistance(snapshot.RequiredJumpMeters));
-            text.Append("Motion: ");
-            if (snapshot.Status == MotionStatus.Closing)
-                text.AppendLine("CLOSING");
-            else if (snapshot.Status == MotionStatus.Receding)
-                text.AppendLine("RECEDING");
+            if (snapshot.Geometry.UsesLogicalShipPosition)
+                text.Append("SHIP -> ").AppendLine(snapshot.TargetName);
             else
-                text.AppendLine("NEARLY STABLE");
+                text.Append(snapshot.SourceName).Append(" -> ").AppendLine(snapshot.TargetName);
+            text.Append("Navigation mode: ").AppendLine(FormatNavigationMode(snapshot.Geometry));
+            if (!snapshot.Geometry.IsShipPositionKnown)
+                text.AppendLine("Position: UNKNOWN (RSS logical position unavailable)");
+            text.Append("Center distance: ").AppendLine(FormatDistance(snapshot.DistanceMeters));
+            text.Append(snapshot.Geometry.IsShipPositionKnown ? "Est. required:  " : "Body-route ref: ")
+                .AppendLine(FormatDistance(snapshot.RequiredJumpMeters));
+            if (snapshot.Geometry.UsesLogicalShipPosition)
+            {
+                text.Append("Ship trajectory: ")
+                    .AppendLine(snapshot.Geometry.HasShipTrajectory ? "ESTIMATED" : "NOT MODELED");
+            }
+            else
+            {
+                text.Append("Motion: ");
+                if (snapshot.Status == MotionStatus.Closing)
+                    text.AppendLine("CLOSING");
+                else if (snapshot.Status == MotionStatus.Receding)
+                    text.AppendLine("RECEDING");
+                else
+                    text.AppendLine("NEARLY STABLE");
 
-            text.Append("Rate: ")
-                .Append(snapshot.RadialRateKmPerMinute >= 0 ? "+" : string.Empty)
-                .Append(snapshot.RadialRateKmPerMinute.ToString("0.00", CultureInfo.InvariantCulture))
-                .AppendLine(" km/min");
+                text.Append("Rate: ")
+                    .Append(snapshot.RadialRateKmPerMinute >= 0 ? "+" : string.Empty)
+                    .Append(snapshot.RadialRateKmPerMinute.ToString("0.00", CultureInfo.InvariantCulture))
+                    .AppendLine(" km/min");
+            }
 
             text.AppendLine();
             text.AppendLine("JUMP GEOMETRY");
+            text.Append("Navigation mode: ").AppendLine(FormatNavigationMode(snapshot.Geometry));
             text.Append("Source offset: ")
                 .Append(FormatDistance(snapshot.Geometry.SourceAllowanceMeters))
                 .Append(" (").Append(snapshot.Geometry.SourceDescription).AppendLine(")");
@@ -219,7 +235,30 @@ namespace Boquetas.RssOrbitalNavigator
                     text.Append("Warning: ").AppendLine(snapshot.JumpInfo.ErrorMessage);
             }
 
-            if (snapshot.JumpInfo.RangeMeters > 0)
+            if (!snapshot.Geometry.IsShipPositionKnown)
+            {
+                text.AppendLine("Jump window: unavailable (ship position unknown)");
+            }
+            else if (snapshot.Geometry.UsesLogicalShipPosition)
+            {
+                if (snapshot.JumpWindow.IsOpenNow)
+                {
+                    text.Append("Current ship-to-target check: REACHABLE");
+                    if (snapshot.JumpWindow.HasClose)
+                        text.Append(" (closes in ").Append(FormatDuration(snapshot.JumpWindow.CloseSecondsFromNow)).Append(')');
+                    text.AppendLine();
+                }
+                else if (snapshot.Geometry.HasShipTrajectory && snapshot.JumpWindow.Found)
+                {
+                    text.Append("Ship trajectory forecast: opens in ")
+                        .AppendLine(FormatDuration(snapshot.JumpWindow.OpenSecondsFromNow));
+                }
+                else
+                {
+                    text.AppendLine("Current ship-to-target check: OUT OF RANGE");
+                }
+            }
+            else if (snapshot.JumpInfo.RangeMeters > 0)
             {
                 if (!snapshot.JumpWindow.Found)
                 {

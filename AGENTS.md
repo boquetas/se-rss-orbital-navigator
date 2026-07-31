@@ -54,3 +54,20 @@ Before changing orbital math or timing:
 6. Review the Space Engineers log for `[RSS Orbital Navigator]` errors.
 
 Do not claim successful compilation unless tested against the installed Space Engineers/Torch assemblies.
+
+## Release Procedure
+
+Follow this procedure for every versioned release:
+
+1. Work on `develop`; keep the worktree clean before starting the release preparation.
+2. Update the version in the first heading of `README.md`.
+3. Move completed entries from `CHANGELOG.md` `Unreleased` into a new matching version section.
+4. Update `README.md`, `CustomData.example.ini`, `SteamWorkshopDescription.txt`, and any user-facing release notes.
+5. Run `git diff --check`.
+6. Validate that `Data/Scripts/RSSOrbitalNavigator` contains exactly one `MySessionComponentDescriptor`.
+7. Deploy changed runtime/documentation files to `/mnt/c/Users/krateria/AppData/Roaming/SpaceEngineers/Mods/RSSOrbitalNavigator` when testing locally.
+8. Commit the release preparation on `develop` and push `origin/develop`.
+9. Merge `develop` into `main` with a merge commit when fast-forwarding is unavailable, then push `origin/main`.
+10. Verify the Release workflow creates `v<version>` and `RSSOrbitalNavigator-<version>.zip`.
+
+The workflow updates the prerelease `develop-latest` for `develop`. A push to `main` reads the first semantic version from `README.md`, refuses an existing tag, and creates the versioned GitHub release. Do not claim a successful game compilation unless the installed Space Engineers/Torch assemblies or an in-game load have verified it.

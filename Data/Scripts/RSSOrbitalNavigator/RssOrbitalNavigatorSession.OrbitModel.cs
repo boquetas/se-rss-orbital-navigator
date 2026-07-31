@@ -35,8 +35,12 @@ namespace Boquetas.RssOrbitalNavigator
             DateTime sampleTime = MyAPIGateway.Session.GameDateTime;
             double epochSeconds = (sampleTime - config.ModelEpoch).TotalSeconds;
             double modelSeconds = epochSeconds * GlobalTimescale + config.TimeOffsetSeconds;
-            double centerDistance = DistanceAt(source, target, modelSeconds);
+            double centerDistance = geometry.UsesLogicalShipPosition
+                ? geometry.ShipToTargetDistanceMeters
+                : DistanceAt(source, target, modelSeconds);
             double requiredJumpDistance = RequiredJumpDistance(centerDistance, geometry);
+            if (geometry.UsesLogicalShipPosition)
+                UpdateShipTrajectory(panelBlock.EntityId, config, requiredJumpDistance, sampleTime, geometry);
 
             double derivativeWindow = 10.0;
             double before = DistanceAt(source, target, modelSeconds - derivativeWindow);
@@ -45,7 +49,13 @@ namespace Boquetas.RssOrbitalNavigator
 
             MotionStatus status;
             double rateKmPerMinute = radialMetersPerSecond * 0.06;
-            if (Math.Abs(rateKmPerMinute) < 0.01)
+            if (geometry.UsesLogicalShipPosition)
+            {
+                status = MotionStatus.Stable;
+                radialMetersPerSecond = 0.0;
+                rateKmPerMinute = 0.0;
+            }
+            else if (Math.Abs(rateKmPerMinute) < 0.01)
                 status = MotionStatus.Stable;
             else if (rateKmPerMinute < 0)
                 status = MotionStatus.Closing;
@@ -57,9 +67,38 @@ namespace Boquetas.RssOrbitalNavigator
                 closest.RequiredJumpMeters = RequiredJumpDistance(closest.DistanceMeters, geometry);
 
             JumpWindow jumpWindow = default(JumpWindow);
-            if (jumpInfo.RangeMeters > 0)
+            if (geometry.UsesLogicalShipPosition && jumpInfo.RangeMeters > 0)
+            {
+                jumpWindow.Found = true;
+                jumpWindow.IsOpenNow = requiredJumpDistance <= jumpInfo.RangeMeters;
+                if (!jumpWindow.IsOpenNow && geometry.HasShipTrajectory
+                    && geometry.ShipRequiredRateMetersPerSecond < 0.0)
+                {
+                    double secondsToOpen = (requiredJumpDistance - jumpInfo.RangeMeters)
+                        / -geometry.ShipRequiredRateMetersPerSecond;
+                    if (secondsToOpen <= config.ShipForecastMinutes * 60.0)
+                        jumpWindow.OpenSecondsFromNow = Math.Max(0.0, secondsToOpen);
+                    else
+                        jumpWindow.Found = false;
+                }
+                else if (jumpWindow.IsOpenNow && geometry.HasShipTrajectory
+                    && geometry.ShipRequiredRateMetersPerSecond > 0.0)
+                {
+                    double secondsToClose = (jumpInfo.RangeMeters - requiredJumpDistance)
+                        / geometry.ShipRequiredRateMetersPerSecond;
+                    if (secondsToClose <= config.ShipForecastMinutes * 60.0)
+                    {
+                        jumpWindow.CloseSecondsFromNow = Math.Max(0.0, secondsToClose);
+                        jumpWindow.HasClose = true;
+                    }
+                }
+            }
+            else if (geometry.CanForecastShipPosition && jumpInfo.RangeMeters > 0)
                 jumpWindow = FindJumpWindow(source, target, modelSeconds,
                     config.PredictionHours * 3600.0, jumpInfo.RangeMeters, geometry);
+
+            if (geometry.UsesLogicalShipPosition || !geometry.IsShipPositionKnown)
+                closest = default(ClosestResult);
 
             return new Snapshot
             {
@@ -79,15 +118,62 @@ namespace Boquetas.RssOrbitalNavigator
             };
         }
 
+        private void UpdateShipTrajectory(long panelId, PanelConfig config, double requiredJumpDistance,
+            DateTime sampleTime, NavigationGeometry geometry)
+        {
+            ShipTrajectoryMemory memory;
+            if (!_shipTrajectoryMemory.TryGetValue(panelId, out memory))
+            {
+                memory = new ShipTrajectoryMemory();
+                _shipTrajectoryMemory[panelId] = memory;
+            }
+
+            string routeKey = config.SourceBody + "|" + config.TargetBody;
+            if (!string.Equals(memory.RouteKey, routeKey, StringComparison.OrdinalIgnoreCase))
+            {
+                memory.RouteKey = routeKey;
+                memory.HasSample = false;
+                memory.HasRate = false;
+            }
+
+            if (memory.HasSample)
+            {
+                double seconds = (sampleTime - memory.LastSampleTime).TotalSeconds;
+                if (seconds >= 1.0 && seconds <= 600.0)
+                {
+                    memory.RequiredRateMetersPerSecond = (requiredJumpDistance
+                        - memory.LastRequiredDistanceMeters) / seconds;
+                    memory.HasRate = true;
+                }
+            }
+
+            memory.LastSampleTime = sampleTime;
+            memory.LastRequiredDistanceMeters = requiredJumpDistance;
+            memory.HasSample = true;
+            geometry.HasShipTrajectory = memory.HasRate;
+            geometry.ShipRequiredRateMetersPerSecond = memory.RequiredRateMetersPerSecond;
+            geometry.CanForecastShipPosition = memory.HasRate;
+        }
+
         private NavigationGeometry BuildNavigationGeometry(ModTerminalBlock panelBlock, BodyDef source,
             BodyDef target, PanelConfig config)
         {
             NavigationGeometry geometry = new NavigationGeometry();
+            geometry.ConfiguredNavigationMode = config.NavigationMode;
+            geometry.EffectiveNavigationMode = config.NavigationMode == NavigationMode.DeepSpace
+                ? NavigationMode.DeepSpace : NavigationMode.Planetary;
+            geometry.IsShipPositionKnown = config.NavigationMode != NavigationMode.DeepSpace;
+            geometry.CanForecastShipPosition = config.NavigationMode != NavigationMode.DeepSpace;
             geometry.SourceMode = config.SourceRadiusMode;
             geometry.TargetMode = config.TargetArrivalMode;
             geometry.TargetSafetyMarginMeters = config.TargetSafetyMarginKm * 1000.0;
 
-            if (config.SourceRadiusMode == SourceRadiusMode.Center)
+            if (config.NavigationMode == NavigationMode.DeepSpace)
+            {
+                geometry.SourceAllowanceMeters = 0;
+                geometry.SourceDescription = "DEEP SPACE";
+            }
+            else if (config.SourceRadiusMode == SourceRadiusMode.Center)
             {
                 geometry.SourceAllowanceMeters = 0;
                 geometry.SourceDescription = "CENTER";
@@ -116,8 +202,30 @@ namespace Boquetas.RssOrbitalNavigator
                 else
                 {
                     geometry.SourceAllowanceMeters = 0;
-                    geometry.SourceDescription = "AUTO FAILED";
-                    geometry.Warning = "Could not locate the source planet voxel near this grid; source allowance is 0 km.";
+                    if (config.NavigationMode == NavigationMode.Auto)
+                    {
+                        geometry.EffectiveNavigationMode = NavigationMode.DeepSpace;
+                        geometry.IsShipPositionKnown = false;
+                        geometry.CanForecastShipPosition = false;
+                        geometry.SourceDescription = "DEEP SPACE (AUTO)";
+                    }
+                    else
+                    {
+                        geometry.SourceDescription = "AUTO FAILED";
+                        geometry.Warning = "Could not locate the source planet voxel near this grid; source allowance is 0 km.";
+                    }
+                }
+            }
+
+            if (geometry.EffectiveNavigationMode == NavigationMode.DeepSpace)
+            {
+                double shipToTargetDistance;
+                if (TryGetRssShipToBodyDistance(panelBlock, target, _rssPlanets, out shipToTargetDistance))
+                {
+                    geometry.IsShipPositionKnown = true;
+                    geometry.UsesLogicalShipPosition = true;
+                    geometry.CanForecastShipPosition = false;
+                    geometry.ShipToTargetDistanceMeters = shipToTargetDistance;
                 }
             }
 

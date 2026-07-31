@@ -84,6 +84,13 @@ namespace Boquetas.RssOrbitalNavigator
             OrbitZone
         }
 
+        private enum NavigationMode
+        {
+            Auto,
+            Planetary,
+            DeepSpace
+        }
+
         private enum TargetArrivalMode
         {
             OrbitZone,
@@ -98,7 +105,9 @@ namespace Boquetas.RssOrbitalNavigator
             Soon,
             Open,
             OpenReceding,
-            Error
+            Error,
+            PositionUnknown,
+            OutOfRange
         }
 
         private enum PanelDisplayMode
@@ -126,6 +135,8 @@ namespace Boquetas.RssOrbitalNavigator
 
         private sealed class NavigationGeometry
         {
+            public NavigationMode ConfiguredNavigationMode;
+            public NavigationMode EffectiveNavigationMode;
             public SourceRadiusMode SourceMode;
             public TargetArrivalMode TargetMode;
             public double SourceAllowanceMeters;
@@ -133,6 +144,12 @@ namespace Boquetas.RssOrbitalNavigator
             public double TargetSafetyMarginMeters;
             public bool SourceAutoDetected;
             public double SourceVoxelRadiusMeters;
+            public bool IsShipPositionKnown;
+            public bool UsesLogicalShipPosition;
+            public bool CanForecastShipPosition;
+            public double ShipToTargetDistanceMeters;
+            public double ShipRequiredRateMetersPerSecond;
+            public bool HasShipTrajectory;
             public string SourceDescription;
             public string TargetDescription;
             public string Warning;
@@ -175,6 +192,16 @@ namespace Boquetas.RssOrbitalNavigator
             public bool WasIdeal;
             public AlertLevel LastLevel;
             public DateTime LastSoundAt = DateTime.MinValue;
+        }
+
+        private sealed class ShipTrajectoryMemory
+        {
+            public string RouteKey;
+            public bool HasSample;
+            public bool HasRate;
+            public DateTime LastSampleTime;
+            public double LastRequiredDistanceMeters;
+            public double RequiredRateMetersPerSecond;
         }
 
         private sealed class RouteSelection

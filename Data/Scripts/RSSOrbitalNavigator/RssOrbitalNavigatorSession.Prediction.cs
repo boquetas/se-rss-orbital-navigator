@@ -134,15 +134,39 @@ namespace Boquetas.RssOrbitalNavigator
                 return result;
             }
 
+            if (!snapshot.Geometry.IsShipPositionKnown)
+            {
+                result.Level = AlertLevel.PositionUnknown;
+                result.FontColor = config.SoonColor;
+                result.StatusText = "POSITION UNKNOWN";
+
+                PanelAlertMemory unknownMemory;
+                if (!_alertMemory.TryGetValue(panelBlock.EntityId, out unknownMemory))
+                    unknownMemory = new PanelAlertMemory();
+                unknownMemory.WasIdeal = false;
+                unknownMemory.LastLevel = result.Level;
+                _alertMemory[panelBlock.EntityId] = unknownMemory;
+                return result;
+            }
+
             bool windowOpen = snapshot.JumpInfo.RangeMeters > 0
                 && snapshot.JumpWindow.Found
                 && snapshot.JumpWindow.IsOpenNow;
             bool opensSoon = snapshot.JumpInfo.RangeMeters > 0
                 && snapshot.JumpWindow.Found
                 && !snapshot.JumpWindow.IsOpenNow
+                && (!snapshot.Geometry.UsesLogicalShipPosition
+                    || (snapshot.Geometry.HasShipTrajectory && snapshot.JumpWindow.OpenSecondsFromNow > 0.0))
                 && snapshot.JumpWindow.OpenSecondsFromNow <= config.AlertLeadMinutes * 60.0;
 
-            if (windowOpen && snapshot.Status == MotionStatus.Receding)
+            if (snapshot.Geometry.UsesLogicalShipPosition && snapshot.JumpInfo.RangeMeters > 0
+                && !windowOpen && !opensSoon)
+            {
+                result.Level = AlertLevel.OutOfRange;
+                result.FontColor = config.ErrorColor;
+                result.StatusText = "OUT OF RANGE";
+            }
+            else if (windowOpen && snapshot.Status == MotionStatus.Receding)
             {
                 result.Level = AlertLevel.OpenReceding;
                 result.FontColor = config.ClosingColor;

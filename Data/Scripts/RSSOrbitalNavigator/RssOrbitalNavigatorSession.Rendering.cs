@@ -77,9 +77,10 @@ namespace Boquetas.RssOrbitalNavigator
             float contentWidth = size.X - margin * 2f;
 
             AddText(frame, Shorten(config.Title, 28), topLeft, 0.62f * fontUnit, DashboardMuted, TextAlignment.LEFT);
-            AddText(frame, Shorten(snapshot.SourceName, 8) + " > " + Shorten(snapshot.TargetName, 8),
+            AddText(frame, FormatRouteLabel(snapshot, 8),
                 topLeft + new Vector2(0f, 22f * unit), 1.02f * fontUnit, DashboardText, TextAlignment.LEFT);
-            AddText(frame, "SRC -/+   DST -/+", topLeft + new Vector2(0f, 48f * unit),
+            AddText(frame, FormatNavigationMode(snapshot.Geometry) + "   " + FormatControlHint(snapshot),
+                topLeft + new Vector2(0f, 48f * unit),
                 0.46f * fontUnit, DashboardMuted, TextAlignment.LEFT);
             AddBadge(frame, FormatBadgeText(alert.Level),
                 origin + new Vector2(size.X - margin, margin + 16f * unit), accent, unit, fontUnit);
@@ -94,7 +95,9 @@ namespace Boquetas.RssOrbitalNavigator
             Vector2 right = left + new Vector2(leftWidth + gap, 0f);
 
             AddCard(frame, left, new Vector2(leftWidth, contentHeight), unit);
-            AddText(frame, "ESTIMATED JUMP", left + new Vector2(12f, 10f) * unit,
+            AddText(frame, snapshot.Geometry.UsesLogicalShipPosition ? "CURRENT SHIP-TO-TARGET"
+                    : (snapshot.Geometry.IsShipPositionKnown ? "ESTIMATED JUMP" : "BODY ROUTE REFERENCE"),
+                left + new Vector2(12f, 10f) * unit,
                 0.55f * fontUnit, DashboardMuted, TextAlignment.LEFT);
             AddText(frame, FormatDashboardDistance(snapshot.RequiredJumpMeters), left + new Vector2(12f, 31f) * unit,
                 1.28f * fontUnit, DashboardText, TextAlignment.LEFT);
@@ -107,16 +110,24 @@ namespace Boquetas.RssOrbitalNavigator
             DrawProgressBar(frame, left + new Vector2(12f, 70f) * unit,
                 leftWidth - 24f * unit, 8f * unit,
                 range > 0.0 ? snapshot.RequiredJumpMeters / range : 0.0,
-                range > 0.0 && marginMeters >= 0.0 ? accent : DashboardDanger);
-            AddText(frame, range > 0.0 ? FormatMargin(marginMeters) : "NO USABLE JUMP RANGE",
+                !snapshot.Geometry.IsShipPositionKnown ? DashboardMuted
+                    : (range > 0.0 && marginMeters >= 0.0 ? accent : DashboardDanger));
+            AddText(frame, range > 0.0
+                    ? (snapshot.Geometry.IsShipPositionKnown ? FormatMargin(marginMeters) : "REFERENCE ONLY")
+                    : "NO USABLE JUMP RANGE",
                 left + new Vector2(12f, 84f) * unit, 0.48f * fontUnit,
-                range > 0.0 && marginMeters >= 0.0 ? accent : DashboardDanger, TextAlignment.LEFT);
+                !snapshot.Geometry.IsShipPositionKnown ? DashboardMuted
+                    : (range > 0.0 && marginMeters >= 0.0 ? accent : DashboardDanger), TextAlignment.LEFT);
 
             float detailTop = 111f * unit;
-            AddMetric(frame, left + new Vector2(12f, detailTop / unit), "CENTER DISTANCE",
+            AddMetric(frame, left + new Vector2(12f, detailTop / unit),
+                snapshot.Geometry.UsesLogicalShipPosition ? "SHIP DISTANCE" : "CENTER DISTANCE",
                 FormatDashboardDistance(snapshot.DistanceMeters), unit, fontUnit);
-            AddMetric(frame, left + new Vector2(leftWidth / unit * 0.52f, detailTop / unit), "RADIAL km/min",
-                FormatMotion(snapshot), unit, fontUnit);
+            AddMetric(frame, left + new Vector2(leftWidth / unit * 0.52f, detailTop / unit),
+                snapshot.Geometry.UsesLogicalShipPosition ? "SHIP TRAJECTORY" : "RADIAL km/min",
+                snapshot.Geometry.UsesLogicalShipPosition
+                    ? (snapshot.Geometry.HasShipTrajectory ? "ESTIMATED" : "NOT MODELED")
+                    : FormatMotion(snapshot), unit, fontUnit);
 
             float lowerTop = Math.Min(contentHeight - 48f * unit, 167f * unit);
             AddText(frame, "NEXT CLOSEST", left + new Vector2(12f, lowerTop / unit) * unit,
@@ -155,16 +166,19 @@ namespace Boquetas.RssOrbitalNavigator
             Vector2 cursor = origin + new Vector2(margin, margin);
 
             AddText(frame, Shorten(config.Title, 30), cursor, 0.58f * fontUnit, DashboardMuted, TextAlignment.LEFT);
-            AddText(frame, Shorten(snapshot.SourceName, 12) + " > " + Shorten(snapshot.TargetName, 12),
+            AddText(frame, FormatRouteLabel(snapshot, 12),
                 cursor + new Vector2(0f, 23f * unit), 0.92f * fontUnit, DashboardText, TextAlignment.LEFT);
-            AddText(frame, "SRC -/+   DST -/+", cursor + new Vector2(0f, 50f * unit),
+            AddText(frame, FormatNavigationMode(snapshot.Geometry) + "   " + FormatControlHint(snapshot),
+                cursor + new Vector2(0f, 50f * unit),
                 0.45f * fontUnit, DashboardMuted, TextAlignment.LEFT);
             AddBadge(frame, FormatBadgeText(alert.Level),
                 origin + new Vector2(size.X - margin, margin + 11f * unit), accent, unit, fontUnit);
 
             cursor.Y += 88f * unit;
             AddCard(frame, cursor, new Vector2(width, 116f * unit), unit);
-            AddText(frame, "ESTIMATED JUMP", cursor + new Vector2(12f, 11f) * unit,
+            AddText(frame, snapshot.Geometry.UsesLogicalShipPosition ? "CURRENT SHIP-TO-TARGET"
+                    : (snapshot.Geometry.IsShipPositionKnown ? "ESTIMATED JUMP" : "BODY ROUTE REFERENCE"),
+                cursor + new Vector2(12f, 11f) * unit,
                 0.5f * fontUnit, DashboardMuted, TextAlignment.LEFT);
             AddText(frame, FormatDashboardDistance(snapshot.RequiredJumpMeters), cursor + new Vector2(12f, 34f) * unit,
                 1.32f * fontUnit, DashboardText, TextAlignment.LEFT);
@@ -173,20 +187,28 @@ namespace Boquetas.RssOrbitalNavigator
             double marginMeters = range - snapshot.RequiredJumpMeters;
             DrawProgressBar(frame, cursor + new Vector2(12f, 81f) * unit, width - 24f * unit, 8f * unit,
                 range > 0.0 ? snapshot.RequiredJumpMeters / range : 0.0,
-                range > 0.0 && marginMeters >= 0.0 ? accent : DashboardDanger);
-            AddText(frame, range > 0.0 ? FormatMargin(marginMeters) : "NO USABLE JUMP RANGE",
+                !snapshot.Geometry.IsShipPositionKnown ? DashboardMuted
+                    : (range > 0.0 && marginMeters >= 0.0 ? accent : DashboardDanger));
+            AddText(frame, range > 0.0
+                    ? (snapshot.Geometry.IsShipPositionKnown ? FormatMargin(marginMeters) : "REFERENCE ONLY")
+                    : "NO USABLE JUMP RANGE",
                 cursor + new Vector2(12f, 96f) * unit, 0.46f * fontUnit,
-                range > 0.0 && marginMeters >= 0.0 ? accent : DashboardDanger, TextAlignment.LEFT);
+                !snapshot.Geometry.IsShipPositionKnown ? DashboardMuted
+                    : (range > 0.0 && marginMeters >= 0.0 ? accent : DashboardDanger), TextAlignment.LEFT);
             AddText(frame, range > 0.0 ? "RANGE " + FormatDashboardDistance(range) : string.Empty,
                 cursor + new Vector2(width / unit - 12f, 96f) * unit,
                 0.46f * fontUnit, DashboardMuted, TextAlignment.RIGHT);
 
             cursor.Y += 126f * unit;
             AddCard(frame, cursor, new Vector2(width, 66f * unit), unit);
-            AddMetric(frame, cursor + new Vector2(12f, 10f) * unit, "CENTER DISTANCE",
+            AddMetric(frame, cursor + new Vector2(12f, 10f) * unit,
+                snapshot.Geometry.UsesLogicalShipPosition ? "SHIP DISTANCE" : "CENTER DISTANCE",
                 FormatDashboardDistance(snapshot.DistanceMeters), unit, fontUnit);
-            AddMetric(frame, cursor + new Vector2(width / unit * 0.52f, 10f) * unit, "RADIAL km/min",
-                FormatMotion(snapshot), unit, fontUnit);
+            AddMetric(frame, cursor + new Vector2(width / unit * 0.52f, 10f) * unit,
+                snapshot.Geometry.UsesLogicalShipPosition ? "SHIP TRAJECTORY" : "RADIAL km/min",
+                snapshot.Geometry.UsesLogicalShipPosition
+                    ? (snapshot.Geometry.HasShipTrajectory ? "ESTIMATED" : "NOT MODELED")
+                    : FormatMotion(snapshot), unit, fontUnit);
 
             cursor.Y += 76f * unit;
             AddCard(frame, cursor, new Vector2(width, 92f * unit), unit);
@@ -218,7 +240,36 @@ namespace Boquetas.RssOrbitalNavigator
             string state;
             string detail;
             Color stateColor = DashboardText;
-            if (snapshot.JumpInfo.RangeMeters <= 0.0)
+            if (!snapshot.Geometry.IsShipPositionKnown)
+            {
+                state = "POSITION UNKNOWN";
+                detail = "BODY ROUTE ONLY - RSS POSITION REQUIRED";
+                stateColor = accent;
+            }
+            else if (snapshot.Geometry.UsesLogicalShipPosition)
+            {
+                if (snapshot.JumpWindow.IsOpenNow)
+                {
+                    state = "CURRENTLY REACHABLE";
+                    detail = snapshot.JumpWindow.HasClose
+                        ? "CLOSES IN " + FormatDashboardDuration(snapshot.JumpWindow.CloseSecondsFromNow)
+                        : "CURRENT SHIP-TO-TARGET CHECK";
+                    stateColor = accent;
+                }
+                else if (snapshot.Geometry.HasShipTrajectory && snapshot.JumpWindow.Found)
+                {
+                    state = "OPENS IN " + FormatDashboardDuration(snapshot.JumpWindow.OpenSecondsFromNow);
+                    detail = "SHIP TRAJECTORY FORECAST";
+                    stateColor = accent;
+                }
+                else
+                {
+                    state = "OUT OF RANGE";
+                    detail = "CURRENT SHIP-TO-TARGET CHECK";
+                    stateColor = DashboardDanger;
+                }
+            }
+            else if (snapshot.JumpInfo.RangeMeters <= 0.0)
             {
                 state = "UNAVAILABLE";
                 detail = snapshot.JumpInfo.IsStaticGrid ? "STATIC GRID" : "NO USABLE RANGE";
@@ -344,6 +395,10 @@ namespace Boquetas.RssOrbitalNavigator
                 return "WINDOW OPEN";
             if (level == AlertLevel.Soon)
                 return "OPENS SOON";
+            if (level == AlertLevel.PositionUnknown)
+                return "POSITION UNKNOWN";
+            if (level == AlertLevel.OutOfRange)
+                return "OUT OF RANGE";
             if (level == AlertLevel.Error)
                 return "ERROR";
             return "MONITORING";
@@ -430,7 +485,35 @@ namespace Boquetas.RssOrbitalNavigator
         private static string FormatDiagnostics(PanelConfig config, Snapshot snapshot)
         {
             return "MODEL " + FormatDuration(snapshot.ModelSeconds) + "  |  EPOCH "
-                + config.ModelEpoch.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+                + config.ModelEpoch.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
+                + "  |  NAV " + FormatNavigationMode(snapshot.Geometry);
+        }
+
+        private static string FormatNavigationMode(NavigationGeometry geometry)
+        {
+            if (geometry == null)
+                return "NAV UNKNOWN";
+
+            if (geometry.UsesLogicalShipPosition)
+                return "RSS POSITION";
+
+            string effective = geometry.EffectiveNavigationMode == NavigationMode.DeepSpace
+                ? "DEEP SPACE" : "PLANETARY";
+            if (geometry.ConfiguredNavigationMode == NavigationMode.Auto)
+                return "AUTO " + effective;
+            return effective;
+        }
+
+        private static string FormatRouteLabel(Snapshot snapshot, int nameLength)
+        {
+            if (snapshot.Geometry.UsesLogicalShipPosition)
+                return "SHIP > " + Shorten(snapshot.TargetName, nameLength);
+            return Shorten(snapshot.SourceName, nameLength) + " > " + Shorten(snapshot.TargetName, nameLength);
+        }
+
+        private static string FormatControlHint(Snapshot snapshot)
+        {
+            return snapshot.Geometry.UsesLogicalShipPosition ? "TARGET -/+" : "SRC -/+   DST -/+";
         }
 
         private static string Shorten(string value, int maximumLength)
