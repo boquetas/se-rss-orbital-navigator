@@ -56,7 +56,7 @@ namespace Boquetas.RssOrbitalNavigator
             BuildCatalog();
             LoadRssApi();
             _started = true;
-            Log("Loaded v0.7.0. Zone-edge jump windows, visual alerts, and sound alerts enabled.");
+            Log("Loaded v0.8.0. Zone-edge jump windows, visual alerts, and sound alerts enabled.");
         }
 
         public override void UpdateAfterSimulation()

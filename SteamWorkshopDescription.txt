@@ -1,6 +1,6 @@
 [h1]RSS Orbital Navigator[/h1]
 
-A server-side navigation display for Space Engineers worlds using [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3351055036]Real Solar Systems[/url]. Current release: 0.7.0.
+A server-side navigation display for Space Engineers worlds using [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3351055036]Real Solar Systems[/url]. Current release: 0.8.0.
 
 The current release supports the [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3367704014]Trithorne Cluster[/url] preset world. It reconstructs logical orbital positions and displays route distance, Jump Drive range, closest approach, and estimated jump windows on LCD surfaces.
 
