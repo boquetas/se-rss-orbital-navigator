@@ -38,6 +38,13 @@ The dashboard and text display show both the configured mode and the effective m
 When the RSS logical-position API is available, deep-space mode uses the ship's converted logical proxy position and performs a current ship-to-target range check. After two samples, it estimates relative required-distance movement over `ShipForecastMinutes`. If the API or target body is unavailable, it shows an amber `POSITION UNKNOWN` state, suppresses predictions and sound alerts, and labels body-to-body values as reference-only.
 In RSS-position deep-space mode, the display shows `SHIP > Target`; `SourceBody` is retained as configuration context but is not the physical departure point.
 
+This provides two distinct navigation views:
+
+- Planetary mode: `Source > Target`, using the logical planet-to-planet route and configured departure/arrival allowances.
+- Deep-space RSS-position mode: `SHIP > Target`, using the current logical ship-to-target distance and Jump Drive reachability.
+
+After two RSS position samples, deep-space mode can estimate short-horizon approach and opening/closing behavior using `ShipForecastMinutes`.
+
 ### SourceRadiusMode
 
 - `Auto`: current distance from the nearest plausible planet voxel.
