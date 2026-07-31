@@ -30,6 +30,7 @@ namespace Boquetas.RssOrbitalNavigator
             public float FontSize = 0.55f;
             public double PredictionHours = 48.0;
             public double ShipForecastMinutes = 30.0;
+            public double PanelUpdateRadiusKm = 5.0;
             public double TimeOffsetSeconds;
             public DateTime ModelEpoch = new DateTime(2081, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
             public JumpRangeMode RangeMode = JumpRangeMode.Auto;
@@ -99,6 +100,8 @@ namespace Boquetas.RssOrbitalNavigator
                         TryParseDouble(value, ref config.PredictionHours);
                     else if (string.Equals(key, "ShipForecastMinutes", StringComparison.OrdinalIgnoreCase))
                         TryParseDouble(value, ref config.ShipForecastMinutes);
+                    else if (string.Equals(key, "PanelUpdateRadiusKm", StringComparison.OrdinalIgnoreCase))
+                        TryParseDouble(value, ref config.PanelUpdateRadiusKm);
                     else if (string.Equals(key, "TimeOffsetSeconds", StringComparison.OrdinalIgnoreCase))
                         TryParseDouble(value, ref config.TimeOffsetSeconds);
                     else if (string.Equals(key, "ModelEpoch", StringComparison.OrdinalIgnoreCase))
@@ -157,6 +160,7 @@ namespace Boquetas.RssOrbitalNavigator
                 config.FontSize = Math.Max(0.1f, Math.Min(10f, config.FontSize));
                 config.PredictionHours = Math.Max(0.25, Math.Min(720.0, config.PredictionHours));
                 config.ShipForecastMinutes = Math.Max(1.0, Math.Min(720.0, config.ShipForecastMinutes));
+                config.PanelUpdateRadiusKm = Math.Max(0.1, Math.Min(100.0, config.PanelUpdateRadiusKm));
                 config.JumpRangeKm = Math.Max(0, config.JumpRangeKm);
                 config.SourceDepartureRadiusKm = Math.Max(0, config.SourceDepartureRadiusKm);
                 config.TargetArrivalRadiusKm = Math.Max(0, config.TargetArrivalRadiusKm);

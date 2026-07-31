@@ -1,4 +1,4 @@
-# RSS Orbital Navigator 0.6.0
+# RSS Orbital Navigator 0.7.0
 
 Session mod for Space Engineers worlds using the Trithorne Cluster RSS configuration.
 
@@ -23,6 +23,7 @@ Defaults:
 - `NavigationMode=Auto`: uses planetary behavior near the configured source body and automatically falls back to deep-space behavior when no plausible source voxel is nearby.
 - `SourceRadiusMode=Auto`: finds the nearest large planet voxel and measures the LCD/grid position from its center.
 - `ShipForecastMinutes=30`: short-horizon ship trajectory forecast used after two RSS position samples are available.
+- `PanelUpdateRadiusKm=5`: only updates the panel when a player is within this distance; the last displayed content is retained while distant.
 - `TargetArrivalMode=OrbitZone`: targets a point inside the target body's RSS orbit zone.
 - `TargetSafetyMarginKm=25`: keeps the target point 25 km inside the zone edge.
 
@@ -37,6 +38,13 @@ This is a navigation estimate. It assumes a favorable departure direction from t
 The dashboard and text display show both the configured mode and the effective mode. For example, `AUTO DEEP SPACE` means automatic detection selected deep-space behavior.
 When the RSS logical-position API is available, deep-space mode uses the ship's converted logical proxy position and performs a current ship-to-target range check. After two samples, it estimates relative required-distance movement over `ShipForecastMinutes`. If the API or target body is unavailable, it shows an amber `POSITION UNKNOWN` state, suppresses predictions and sound alerts, and labels body-to-body values as reference-only.
 In RSS-position deep-space mode, the display shows `SHIP > Target`; `SourceBody` is retained as configuration context but is not the physical departure point.
+
+This provides two distinct navigation views:
+
+- Planetary mode: `Source > Target`, using the logical planet-to-planet route and configured departure/arrival allowances.
+- Deep-space RSS-position mode: `SHIP > Target`, using the current logical ship-to-target distance and Jump Drive reachability.
+
+After two RSS position samples, deep-space mode can estimate short-horizon approach and opening/closing behavior using `ShipForecastMinutes`.
 
 ### SourceRadiusMode
 

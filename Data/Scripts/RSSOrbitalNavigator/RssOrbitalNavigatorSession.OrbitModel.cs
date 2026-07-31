@@ -42,29 +42,34 @@ namespace Boquetas.RssOrbitalNavigator
             if (geometry.UsesLogicalShipPosition)
                 UpdateShipTrajectory(panelBlock.EntityId, config, requiredJumpDistance, sampleTime, geometry);
 
-            double derivativeWindow = 10.0;
-            double before = DistanceAt(source, target, modelSeconds - derivativeWindow);
-            double after = DistanceAt(source, target, modelSeconds + derivativeWindow);
-            double radialMetersPerSecond = (after - before) / (derivativeWindow * 2.0);
-
-            MotionStatus status;
-            double rateKmPerMinute = radialMetersPerSecond * 0.06;
+            MotionStatus status = MotionStatus.Stable;
             if (geometry.UsesLogicalShipPosition)
             {
                 status = MotionStatus.Stable;
-                radialMetersPerSecond = 0.0;
-                rateKmPerMinute = 0.0;
             }
-            else if (Math.Abs(rateKmPerMinute) < 0.01)
-                status = MotionStatus.Stable;
-            else if (rateKmPerMinute < 0)
-                status = MotionStatus.Closing;
-            else
-                status = MotionStatus.Receding;
 
-            ClosestResult closest = FindNextClosest(source, target, modelSeconds, config.PredictionHours * 3600.0);
-            if (closest.Found)
-                closest.RequiredJumpMeters = RequiredJumpDistance(closest.DistanceMeters, geometry);
+            double radialMetersPerSecond = 0.0;
+            double rateKmPerMinute = 0.0;
+            ClosestResult closest = default(ClosestResult);
+            if (!geometry.UsesLogicalShipPosition)
+            {
+                double derivativeWindow = 10.0;
+                double before = DistanceAt(source, target, modelSeconds - derivativeWindow);
+                double after = DistanceAt(source, target, modelSeconds + derivativeWindow);
+                radialMetersPerSecond = (after - before) / (derivativeWindow * 2.0);
+                rateKmPerMinute = radialMetersPerSecond * 0.06;
+
+                if (Math.Abs(rateKmPerMinute) < 0.01)
+                    status = MotionStatus.Stable;
+                else if (rateKmPerMinute < 0)
+                    status = MotionStatus.Closing;
+                else
+                    status = MotionStatus.Receding;
+
+                closest = FindNextClosest(source, target, modelSeconds, config.PredictionHours * 3600.0);
+                if (closest.Found)
+                    closest.RequiredJumpMeters = RequiredJumpDistance(closest.DistanceMeters, geometry);
+            }
 
             JumpWindow jumpWindow = default(JumpWindow);
             if (geometry.UsesLogicalShipPosition && jumpInfo.RangeMeters > 0)

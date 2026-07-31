@@ -1,6 +1,6 @@
 [h1]RSS Orbital Navigator[/h1]
 
-A server-side navigation display for Space Engineers worlds using [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3351055036]Real Solar Systems[/url]. Current release: 0.6.0.
+A server-side navigation display for Space Engineers worlds using [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3351055036]Real Solar Systems[/url]. Current release: 0.7.0.
 
 The current release supports the [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3367704014]Trithorne Cluster[/url] preset world. It reconstructs logical orbital positions and displays route distance, Jump Drive range, closest approach, and estimated jump windows on LCD surfaces.
 
@@ -19,6 +19,7 @@ The current release supports the [url=https://steamcommunity.com/sharedfiles/fil
 [*]Physical Button Panel route selection
 [*]RSS logical ship-position integration for deep-space checks
 [*]Short-horizon ship trajectory estimates after position sampling
+[*]Current ship-to-planet Jump Drive reachability checks
 [*]Dedicated-server and Torch-compatible
 [/list]
 
@@ -96,6 +97,19 @@ In Auto mode, the mod uses the source planet voxel when the ship is near the con
 When the RSS logical-position API is available, deep-space mode converts the ship position into RSS proxy space and performs a current ship-to-target range check. After two samples, it estimates relative required-distance movement for the configured [code]ShipForecastMinutes[/code] horizon. If the API or target body is unavailable, it shows an amber [code]POSITION UNKNOWN[/code] state, labels body-to-body values as reference only, and suppresses unverified predictions and sound alerts.
 
 In RSS-position deep-space mode, the route header shows [code]SHIP > Target[/code]. [code]SourceBody[/code] remains configuration context but is not treated as the ship's physical departure point.
+
+[h2]Ship-To-Planet Navigation[/h2]
+
+The navigator has two clearly separated route behaviors:
+
+[list]
+[*]Planetary mode shows [code]Source > Target[/code] and calculates the logical planet-to-planet route using source departure and target arrival allowances.
+[*]Deep-space RSS-position mode shows [code]SHIP > Target[/code] and calculates the current logical ship-to-target distance.
+[*]The dashboard reports whether the destination is currently reachable with the grid's available Jump Drive range.
+[*]After two position samples, the dashboard can estimate short-horizon approach and opening/closing behavior using [code]ShipForecastMinutes[/code].
+[/list]
+
+This allows a ship that is already away from a planet to navigate directly toward a selected destination without presenting the configured source planet as the ship's current location.
 
 Manual overrides are available:
 

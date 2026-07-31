@@ -27,12 +27,14 @@ namespace Boquetas.RssOrbitalNavigator
         private const string LogPrefix = "[RSS Orbital Navigator] ";
         private const string PanelTag = "[RSSNAV]";
         private const int UpdateEveryFrames = 300;
+        private const int EmptyWorldRetryFrames = 3000;
         private const double GlobalTimescale = 1.0;
 
         private readonly HashSet<IMyEntity> _entities = new HashSet<IMyEntity>();
         private readonly HashSet<IMyEntity> _largeVoxels = new HashSet<IMyEntity>();
         private readonly HashSet<IMyEntity> _rssPlanets = new HashSet<IMyEntity>();
         private readonly List<ModTerminalBlock> _terminalBlocks = new List<ModTerminalBlock>();
+        private readonly List<IMyPlayer> _players = new List<IMyPlayer>();
         private readonly HashSet<long> _processedBlocks = new HashSet<long>();
         private readonly Dictionary<string, BodyDef> _bodies = new Dictionary<string, BodyDef>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, Snapshot> _cycleCache = new Dictionary<string, Snapshot>(StringComparer.OrdinalIgnoreCase);
@@ -45,6 +47,8 @@ namespace Boquetas.RssOrbitalNavigator
         private readonly List<string> _bodyNames = new List<string>();
 
         private int _frameCounter;
+        private int _emptyWorldFrameCounter;
+        private bool _hasCompletedPanelDiscovery;
         private bool _started;
 
         public override void BeforeStart()
@@ -52,7 +56,7 @@ namespace Boquetas.RssOrbitalNavigator
             BuildCatalog();
             LoadRssApi();
             _started = true;
-            Log("Loaded v0.4.0. Zone-edge jump windows, visual alerts, and sound alerts enabled.");
+            Log("Loaded v0.7.0. Zone-edge jump windows, visual alerts, and sound alerts enabled.");
         }
 
         public override void UpdateAfterSimulation()
@@ -65,9 +69,25 @@ namespace Boquetas.RssOrbitalNavigator
                 return;
 
             _frameCounter = 0;
+            if (_hasCompletedPanelDiscovery && _navigationPanels.Count == 0)
+            {
+                _emptyWorldFrameCounter += UpdateEveryFrames;
+                if (_emptyWorldFrameCounter < EmptyWorldRetryFrames)
+                    return;
+                _emptyWorldFrameCounter = 0;
+            }
+            else
+            {
+                _emptyWorldFrameCounter = 0;
+            }
+
             try
             {
+                bool firstDiscovery = !_hasCompletedPanelDiscovery;
                 UpdatePanels();
+                _hasCompletedPanelDiscovery = true;
+                if (firstDiscovery)
+                    Log("Panel discovery found " + _navigationPanels.Count + " tagged panel(s).");
             }
             catch (Exception exception)
             {
@@ -82,6 +102,7 @@ namespace Boquetas.RssOrbitalNavigator
             _largeVoxels.Clear();
             _rssPlanets.Clear();
             _terminalBlocks.Clear();
+            _players.Clear();
             _processedBlocks.Clear();
             _bodies.Clear();
             _cycleCache.Clear();
@@ -102,6 +123,8 @@ namespace Boquetas.RssOrbitalNavigator
             _navigationPanels.Clear();
             _routeSelections.Clear();
             _bodyNames.Clear();
+            _emptyWorldFrameCounter = 0;
+            _hasCompletedPanelDiscovery = false;
             UnloadRssApi();
         }
 
