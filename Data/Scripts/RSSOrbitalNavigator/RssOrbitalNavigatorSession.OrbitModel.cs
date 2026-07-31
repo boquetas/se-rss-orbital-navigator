@@ -57,9 +57,12 @@ namespace Boquetas.RssOrbitalNavigator
                 closest.RequiredJumpMeters = RequiredJumpDistance(closest.DistanceMeters, geometry);
 
             JumpWindow jumpWindow = default(JumpWindow);
-            if (jumpInfo.RangeMeters > 0)
+            if (geometry.IsShipPositionKnown && jumpInfo.RangeMeters > 0)
                 jumpWindow = FindJumpWindow(source, target, modelSeconds,
                     config.PredictionHours * 3600.0, jumpInfo.RangeMeters, geometry);
+
+            if (!geometry.IsShipPositionKnown)
+                closest = default(ClosestResult);
 
             return new Snapshot
             {
@@ -86,6 +89,7 @@ namespace Boquetas.RssOrbitalNavigator
             geometry.ConfiguredNavigationMode = config.NavigationMode;
             geometry.EffectiveNavigationMode = config.NavigationMode == NavigationMode.DeepSpace
                 ? NavigationMode.DeepSpace : NavigationMode.Planetary;
+            geometry.IsShipPositionKnown = config.NavigationMode != NavigationMode.DeepSpace;
             geometry.SourceMode = config.SourceRadiusMode;
             geometry.TargetMode = config.TargetArrivalMode;
             geometry.TargetSafetyMarginMeters = config.TargetSafetyMarginKm * 1000.0;
@@ -127,6 +131,7 @@ namespace Boquetas.RssOrbitalNavigator
                     if (config.NavigationMode == NavigationMode.Auto)
                     {
                         geometry.EffectiveNavigationMode = NavigationMode.DeepSpace;
+                        geometry.IsShipPositionKnown = false;
                         geometry.SourceDescription = "DEEP SPACE (AUTO)";
                     }
                     else

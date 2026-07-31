@@ -129,6 +129,9 @@ namespace Boquetas.RssOrbitalNavigator
             }
 
             text.Append(snapshot.SourceName).Append(" -> ").AppendLine(snapshot.TargetName);
+            text.Append("Navigation mode: ").AppendLine(FormatNavigationMode(snapshot.Geometry));
+            if (!snapshot.Geometry.IsShipPositionKnown)
+                text.AppendLine("Position: UNKNOWN (RSS logical position unavailable)");
             text.Append("Center distance: ").AppendLine(FormatDistance(snapshot.DistanceMeters));
             text.Append("Est. required:  ").AppendLine(FormatDistance(snapshot.RequiredJumpMeters));
             text.Append("Motion: ");
@@ -220,7 +223,11 @@ namespace Boquetas.RssOrbitalNavigator
                     text.Append("Warning: ").AppendLine(snapshot.JumpInfo.ErrorMessage);
             }
 
-            if (snapshot.JumpInfo.RangeMeters > 0)
+            if (!snapshot.Geometry.IsShipPositionKnown)
+            {
+                text.AppendLine("Jump window: unavailable (ship position unknown)");
+            }
+            else if (snapshot.JumpInfo.RangeMeters > 0)
             {
                 if (!snapshot.JumpWindow.Found)
                 {

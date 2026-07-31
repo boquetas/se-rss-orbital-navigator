@@ -220,7 +220,13 @@ namespace Boquetas.RssOrbitalNavigator
             string state;
             string detail;
             Color stateColor = DashboardText;
-            if (snapshot.JumpInfo.RangeMeters <= 0.0)
+            if (!snapshot.Geometry.IsShipPositionKnown)
+            {
+                state = "POSITION UNKNOWN";
+                detail = "BODY ROUTE ONLY - RSS POSITION REQUIRED";
+                stateColor = DashboardDanger;
+            }
+            else if (snapshot.JumpInfo.RangeMeters <= 0.0)
             {
                 state = "UNAVAILABLE";
                 detail = snapshot.JumpInfo.IsStaticGrid ? "STATIC GRID" : "NO USABLE RANGE";

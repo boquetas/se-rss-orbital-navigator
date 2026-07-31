@@ -90,6 +90,8 @@ Navigation mode defaults to automatic:
 
 In Auto mode, the mod uses the source planet voxel when the ship is near the configured source body. When no plausible source voxel is nearby, it automatically switches to deep-space behavior, uses zero source departure allowance, and labels the display [code]AUTO DEEP SPACE[/code].
 
+RSS does not expose a logical ship position to this mod. Therefore deep-space mode marks the position as unknown, shows body-to-body values for reference only, and suppresses unverified jump-window predictions and sound alerts.
+
 Manual overrides are available:
 
 [list]

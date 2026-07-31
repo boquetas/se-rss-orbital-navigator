@@ -134,6 +134,21 @@ namespace Boquetas.RssOrbitalNavigator
                 return result;
             }
 
+            if (!snapshot.Geometry.IsShipPositionKnown)
+            {
+                result.Level = AlertLevel.Error;
+                result.FontColor = config.ErrorColor;
+                result.StatusText = "POSITION UNKNOWN";
+
+                PanelAlertMemory unknownMemory;
+                if (!_alertMemory.TryGetValue(panelBlock.EntityId, out unknownMemory))
+                    unknownMemory = new PanelAlertMemory();
+                unknownMemory.WasIdeal = false;
+                unknownMemory.LastLevel = result.Level;
+                _alertMemory[panelBlock.EntityId] = unknownMemory;
+                return result;
+            }
+
             bool windowOpen = snapshot.JumpInfo.RangeMeters > 0
                 && snapshot.JumpWindow.Found
                 && snapshot.JumpWindow.IsOpenNow;
