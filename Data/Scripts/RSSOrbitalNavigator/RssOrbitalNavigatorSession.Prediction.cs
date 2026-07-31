@@ -157,7 +157,13 @@ namespace Boquetas.RssOrbitalNavigator
                 && !snapshot.JumpWindow.IsOpenNow
                 && snapshot.JumpWindow.OpenSecondsFromNow <= config.AlertLeadMinutes * 60.0;
 
-            if (windowOpen && snapshot.Status == MotionStatus.Receding)
+            if (snapshot.Geometry.UsesLogicalShipPosition && snapshot.JumpInfo.RangeMeters > 0 && !windowOpen)
+            {
+                result.Level = AlertLevel.OutOfRange;
+                result.FontColor = config.ErrorColor;
+                result.StatusText = "OUT OF RANGE";
+            }
+            else if (windowOpen && snapshot.Status == MotionStatus.Receding)
             {
                 result.Level = AlertLevel.OpenReceding;
                 result.FontColor = config.ClosingColor;

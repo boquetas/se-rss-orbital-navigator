@@ -376,6 +376,8 @@ namespace Boquetas.RssOrbitalNavigator
                 return "OPENS SOON";
             if (level == AlertLevel.PositionUnknown)
                 return "POSITION UNKNOWN";
+            if (level == AlertLevel.OutOfRange)
+                return "OUT OF RANGE";
             if (level == AlertLevel.Error)
                 return "ERROR";
             return "MONITORING";
