@@ -1,6 +1,11 @@
 # Changelog
 
 ## Unreleased
+
+## 0.5.0
+- Added physical Button Panel route controls for cycling source and destination bodies.
+- Added four-button `[RSSNAV MULTI]` control-panel support.
+- Added dashboard route-control hints and improved header spacing for LCD readability.
 - Added a responsive sprite dashboard for wide cockpit surfaces and square LCDs.
 - Added per-element status colors, range utilization and jump-drive charge bars.
 - Added compact jump-window, relative-motion and closest-approach summaries.
