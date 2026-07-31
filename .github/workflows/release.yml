@@ -1,0 +1,116 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine release
+        id: release
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "$GITHUB_REF_NAME" == "develop" ]]; then
+            echo "tag=develop-latest" >> "$GITHUB_OUTPUT"
+            echo "version=develop" >> "$GITHUB_OUTPUT"
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          version="$(grep -m1 -oE '[0-9]+\.[0-9]+\.[0-9]+' README.md)"
+          if [[ -z "$version" ]]; then
+            echo "Could not determine the release version from README.md" >&2
+            exit 1
+          fi
+
+          echo "tag=v${version}" >> "$GITHUB_OUTPUT"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "prerelease=false" >> "$GITHUB_OUTPUT"
+
+      - name: Validate package
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -d Data/Scripts/RSSOrbitalNavigator
+          test "$(find Data/Scripts/RSSOrbitalNavigator -maxdepth 1 -name '*.cs' | wc -l)" -gt 0
+          test "$(grep -R -l 'MySessionComponentDescriptor' Data/Scripts/RSSOrbitalNavigator --include='*.cs' | wc -l)" -eq 1
+
+      - name: Build package
+        shell: bash
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          set -euo pipefail
+          package="RSSOrbitalNavigator"
+          mkdir -p "dist/${package}"
+          cp -R Data "dist/${package}/"
+          cp README.md CHANGELOG.md CustomData.example.ini "dist/${package}/"
+          cd dist
+          zip -r "${package}-${VERSION}.zip" "$package"
+
+      - name: Replace develop release
+        if: steps.release.outputs.prerelease == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          set -euo pipefail
+          git tag --force "$TAG" "$GITHUB_SHA"
+          git push --force origin "refs/tags/${TAG}"
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" \
+              --title "Development build (${GITHUB_SHA::7})" \
+              --notes "Latest successful build from develop at ${GITHUB_SHA}." \
+              --prerelease \
+              --latest=false
+          else
+            gh release create "$TAG" \
+              --title "Development build (${GITHUB_SHA::7})" \
+              --notes "Latest successful build from develop at ${GITHUB_SHA}." \
+              --prerelease \
+              --latest=false
+          fi
+
+          gh release upload "$TAG" "dist/RSSOrbitalNavigator-${VERSION}.zip" --clobber
+
+      - name: Create versioned release
+        if: steps.release.outputs.prerelease == 'false'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          set -euo pipefail
+          if git rev-parse "$TAG" >/dev/null 2>&1 || gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release ${TAG} already exists. Increment the version in README.md before releasing main." >&2
+            exit 1
+          fi
+
+          gh release create "$TAG" "dist/RSSOrbitalNavigator-${VERSION}.zip" \
+            --target "$GITHUB_SHA" \
+            --title "RSS Orbital Navigator ${VERSION}" \
+            --generate-notes \
+            --latest
