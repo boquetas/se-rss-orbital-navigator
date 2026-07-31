@@ -144,6 +144,9 @@ namespace Boquetas.RssOrbitalNavigator
             public bool SourceAutoDetected;
             public double SourceVoxelRadiusMeters;
             public bool IsShipPositionKnown;
+            public bool UsesLogicalShipPosition;
+            public bool CanForecastShipPosition;
+            public double ShipToTargetDistanceMeters;
             public string SourceDescription;
             public string TargetDescription;
             public string Warning;

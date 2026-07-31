@@ -27,6 +27,7 @@ namespace Boquetas.RssOrbitalNavigator
         {
             _entities.Clear();
             _largeVoxels.Clear();
+            _rssPlanets.Clear();
             _processedBlocks.Clear();
             _cycleCache.Clear();
             _navigationPanels.Clear();
@@ -41,6 +42,11 @@ namespace Boquetas.RssOrbitalNavigator
                 VoxelBase voxel = entity as VoxelBase;
                 return voxel != null && entity.WorldVolume.Radius >= 9000.0;
             });
+
+            MyAPIGateway.Entities.GetEntities(_rssPlanets, entity =>
+                entity is Sandbox.Game.Entities.MyPlanet && !entity.MarkedForClose && !entity.Closed);
+
+            RequestRssApi();
 
             foreach (IMyEntity entity in _entities)
             {

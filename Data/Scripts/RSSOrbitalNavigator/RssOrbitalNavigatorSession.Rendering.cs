@@ -95,7 +95,8 @@ namespace Boquetas.RssOrbitalNavigator
             Vector2 right = left + new Vector2(leftWidth + gap, 0f);
 
             AddCard(frame, left, new Vector2(leftWidth, contentHeight), unit);
-            AddText(frame, snapshot.Geometry.IsShipPositionKnown ? "ESTIMATED JUMP" : "BODY ROUTE REFERENCE",
+            AddText(frame, snapshot.Geometry.UsesLogicalShipPosition ? "CURRENT SHIP-TO-TARGET"
+                    : (snapshot.Geometry.IsShipPositionKnown ? "ESTIMATED JUMP" : "BODY ROUTE REFERENCE"),
                 left + new Vector2(12f, 10f) * unit,
                 0.55f * fontUnit, DashboardMuted, TextAlignment.LEFT);
             AddText(frame, FormatDashboardDistance(snapshot.RequiredJumpMeters), left + new Vector2(12f, 31f) * unit,
@@ -171,7 +172,8 @@ namespace Boquetas.RssOrbitalNavigator
 
             cursor.Y += 88f * unit;
             AddCard(frame, cursor, new Vector2(width, 116f * unit), unit);
-            AddText(frame, snapshot.Geometry.IsShipPositionKnown ? "ESTIMATED JUMP" : "BODY ROUTE REFERENCE",
+            AddText(frame, snapshot.Geometry.UsesLogicalShipPosition ? "CURRENT SHIP-TO-TARGET"
+                    : (snapshot.Geometry.IsShipPositionKnown ? "ESTIMATED JUMP" : "BODY ROUTE REFERENCE"),
                 cursor + new Vector2(12f, 11f) * unit,
                 0.5f * fontUnit, DashboardMuted, TextAlignment.LEFT);
             AddText(frame, FormatDashboardDistance(snapshot.RequiredJumpMeters), cursor + new Vector2(12f, 34f) * unit,
@@ -235,6 +237,12 @@ namespace Boquetas.RssOrbitalNavigator
                 state = "POSITION UNKNOWN";
                 detail = "BODY ROUTE ONLY - RSS POSITION REQUIRED";
                 stateColor = accent;
+            }
+            else if (snapshot.Geometry.UsesLogicalShipPosition)
+            {
+                state = snapshot.JumpWindow.IsOpenNow ? "CURRENTLY REACHABLE" : "OUT OF RANGE";
+                detail = "CURRENT SHIP-TO-TARGET CHECK";
+                stateColor = snapshot.JumpWindow.IsOpenNow ? accent : DashboardDanger;
             }
             else if (snapshot.JumpInfo.RangeMeters <= 0.0)
             {
@@ -458,6 +466,9 @@ namespace Boquetas.RssOrbitalNavigator
         {
             if (geometry == null)
                 return "NAV UNKNOWN";
+
+            if (geometry.UsesLogicalShipPosition)
+                return "RSS POSITION";
 
             string effective = geometry.EffectiveNavigationMode == NavigationMode.DeepSpace
                 ? "DEEP SPACE" : "PLANETARY";

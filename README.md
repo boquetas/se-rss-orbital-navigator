@@ -34,7 +34,7 @@ This is a navigation estimate. It assumes a favorable departure direction from t
 - `DeepSpace`: skips source voxel detection and uses zero source allowance.
 
 The dashboard and text display show both the configured mode and the effective mode. For example, `AUTO DEEP SPACE` means automatic detection selected deep-space behavior.
-Because RSS does not expose a logical ship position here, deep-space mode shows an amber `POSITION UNKNOWN` state, suppresses jump-window predictions and sound alerts, and labels the body-to-body values as reference-only.
+When the RSS logical-position API is available, deep-space mode uses the ship's converted logical proxy position and performs a current ship-to-target range check. It does not forecast future windows because ship trajectory is not modeled yet. If the API or target body is unavailable, it shows an amber `POSITION UNKNOWN` state, suppresses predictions and sound alerts, and labels body-to-body values as reference-only.
 
 ### SourceRadiusMode
 

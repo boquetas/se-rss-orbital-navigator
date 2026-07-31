@@ -228,6 +228,11 @@ namespace Boquetas.RssOrbitalNavigator
             {
                 text.AppendLine("Jump window: unavailable (ship position unknown)");
             }
+            else if (snapshot.Geometry.UsesLogicalShipPosition)
+            {
+                text.Append("Current ship-to-target check: ")
+                    .AppendLine(snapshot.JumpWindow.IsOpenNow ? "REACHABLE" : "OUT OF RANGE");
+            }
             else if (snapshot.JumpInfo.RangeMeters > 0)
             {
                 if (!snapshot.JumpWindow.Found)

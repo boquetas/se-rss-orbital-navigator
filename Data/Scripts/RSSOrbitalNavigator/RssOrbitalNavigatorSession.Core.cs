@@ -31,6 +31,7 @@ namespace Boquetas.RssOrbitalNavigator
 
         private readonly HashSet<IMyEntity> _entities = new HashSet<IMyEntity>();
         private readonly HashSet<IMyEntity> _largeVoxels = new HashSet<IMyEntity>();
+        private readonly HashSet<IMyEntity> _rssPlanets = new HashSet<IMyEntity>();
         private readonly List<ModTerminalBlock> _terminalBlocks = new List<ModTerminalBlock>();
         private readonly HashSet<long> _processedBlocks = new HashSet<long>();
         private readonly Dictionary<string, BodyDef> _bodies = new Dictionary<string, BodyDef>(StringComparer.OrdinalIgnoreCase);
@@ -48,6 +49,7 @@ namespace Boquetas.RssOrbitalNavigator
         public override void BeforeStart()
         {
             BuildCatalog();
+            LoadRssApi();
             _started = true;
             Log("Loaded v0.4.0. Zone-edge jump windows, visual alerts, and sound alerts enabled.");
         }
@@ -77,6 +79,7 @@ namespace Boquetas.RssOrbitalNavigator
             _started = false;
             _entities.Clear();
             _largeVoxels.Clear();
+            _rssPlanets.Clear();
             _terminalBlocks.Clear();
             _processedBlocks.Clear();
             _bodies.Clear();
@@ -97,6 +100,7 @@ namespace Boquetas.RssOrbitalNavigator
             _navigationPanels.Clear();
             _routeSelections.Clear();
             _bodyNames.Clear();
+            UnloadRssApi();
         }
 
         private void BuildCatalog()

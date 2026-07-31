@@ -6,6 +6,7 @@
 - Added effective navigation mode labels to dashboard, text, and diagnostics output.
 - Deep-space mode now marks ship position unknown and suppresses unverified jump-window alerts.
 - Deep-space reference distances are now labeled explicitly and no longer rendered as an error state.
+- Added RSS API integration for current deep-space ship-to-target range checks.
 
 ## 0.5.0
 - Added physical Button Panel route controls for cycling source and destination bodies.
