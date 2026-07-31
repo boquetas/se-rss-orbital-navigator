@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+## 0.9.0
+- Reworked the Workshop description to fit the platform character limit while retaining setup and performance guidance.
+
 ## 0.8.0
 - Changed the default `PanelUpdateRadiusKm` from 5 km to 0.2 km (200 m) when not configured.
 

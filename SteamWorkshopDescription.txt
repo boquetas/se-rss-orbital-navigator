@@ -1,6 +1,6 @@
 [h1]RSS Orbital Navigator[/h1]
 
-A server-side navigation display for Space Engineers worlds using [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3351055036]Real Solar Systems[/url]. Current release: 0.8.0.
+A server-side navigation display for Space Engineers worlds using [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3351055036]Real Solar Systems[/url]. Current release: 0.9.0.
 
 The current release supports the [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3367704014]Trithorne Cluster[/url] preset world. It reconstructs logical orbital positions and displays route distance, Jump Drive range, closest approach, and estimated jump windows on LCD surfaces.
 
@@ -12,11 +12,9 @@ The current release supports the [url=https://steamcommunity.com/sharedfiles/fil
 [*]Automatic Jump Drive range and charge detection
 [*]Estimated departure and arrival allowances
 [*]Jump-window opening and closing predictions
-[*]Closest-approach forecast
 [*]Approaching, open, closing, and error status colors
 [*]Optional Sound Block alert when a usable window opens
-[*]Dashboard and detailed text display modes
-[*]Physical Button Panel route selection
+[*]Dashboard and detailed text display modes with Button Panel route selection
 [*]RSS logical ship-position integration for deep-space checks
 [*]Short-horizon ship trajectory estimates after position sampling
 [*]Current ship-to-planet Jump Drive reachability checks
@@ -54,6 +52,7 @@ DisplayMode=Dashboard
 FontSize=0.55
 PredictionHours=48
 ShipForecastMinutes=30
+PanelUpdateRadiusKm=0.2
 ModelEpoch=2081-01-01T00:00:00
 TimeOffsetSeconds=0
 
@@ -98,83 +97,6 @@ When the RSS logical-position API is available, deep-space mode converts the shi
 
 In RSS-position deep-space mode, the route header shows [code]SHIP > Target[/code]. [code]SourceBody[/code] remains configuration context but is not treated as the ship's physical departure point.
 
-[h2]Ship-To-Planet Navigation[/h2]
-
-The navigator has two clearly separated route behaviors:
-
-[list]
-[*]Planetary mode shows [code]Source > Target[/code] and calculates the logical planet-to-planet route using source departure and target arrival allowances.
-[*]Deep-space RSS-position mode shows [code]SHIP > Target[/code] and calculates the current logical ship-to-target distance.
-[*]The dashboard reports whether the destination is currently reachable with the grid's available Jump Drive range.
-[*]After two position samples, the dashboard can estimate short-horizon approach and opening/closing behavior using [code]ShipForecastMinutes[/code].
-[/list]
-
-This allows a ship that is already away from a planet to navigate directly toward a selected destination without presenting the configured source planet as the ship's current location.
-
-Manual overrides are available:
-
-[list]
-[*][code]NavigationMode=Planetary[/code] forces source-planet behavior and reports a warning if automatic source-voxel detection fails.
-[*][code]NavigationMode=DeepSpace[/code] skips source-voxel detection and uses zero source departure allowance.
-[/list]
-
-The source radius options remain available for planetary mode. For example, use [code]NavigationMode=Planetary[/code] with [code]SourceRadiusMode=Manual[/code] and [code]SourceDepartureRadiusKm=500[/code] for a fixed departure allowance.
-
-[h2]Physical Route Controls[/h2]
-
-Route selection can be changed without editing Custom Data. Add Button Panels to the same construct as the LCD and include one of these tags in each panel name:
-
-[list]
-[*][code][RSSNAV SRC NEXT][/code] or [code][RSSNAV SRC PREV][/code]
-[*][code][RSSNAV DST NEXT][/code] or [code][RSSNAV DST PREV][/code]
-[*][code][RSSNAV RESET][/code]
-[/list]
-
-For a single four-button panel, name it:
-
-[code][RSSNAV MULTI][/code]
-
-The multi-panel buttons are mapped as follows:
-
-[list]
-[*]Button 1: source previous
-[*]Button 2: source next
-[*]Button 3: destination previous
-[*]Button 4: destination next
-[/list]
-
-The buttons must have a toolbar action assigned in the game. A harmless Timer Block action can be used if no other action is needed. The mod receives the button-press event and updates all [code][RSSNAV][/code] displays on the same construct. [code]SourceBody[/code] and [code]TargetBody[/code] remain the startup and reset defaults.
-
-[h2]Reading The Dashboard[/h2]
-
-[b]Estimated Jump[/b] is the calculated travel distance after source departure and target-arrival allowances.
-
-[b]Range[/b] is the current usable range reported by the grid's Jump Drive system.
-
-[b]Short[/b] indicates how much additional range is currently required.
-
-[b]Min[/b] is the minimum estimated jump distance found during the configured forecast period.
-
-A jump window exists when the estimated required distance becomes equal to or lower than the grid's usable range.
-
-Example:
-
-[code]
-Minimum required: 1.8k km
-Available range:  2.0k km
-Result:            jump window available
-[/code]
-
-Status colors:
-
-[list]
-[*][b]White:[/b] monitoring
-[*][b]Yellow:[/b] window opening soon
-[*][b]Green:[/b] jump window open
-[*][b]Orange:[/b] window open but closing
-[*][b]Red:[/b] configuration or navigation error
-[/list]
-
 [h2]Display Modes[/h2]
 
 [b]Dashboard[/b] displays a responsive sprite-based navigation console with route, range, jump-window, motion, forecast, and Jump Drive information.
@@ -188,6 +110,8 @@ Set the mode in Custom Data:
 or:
 
 [code]DisplayMode=Text[/code]
+
+The dashboard reports route, estimated jump, available range, jump-window status, motion, forecast, and Jump Drive information. Status colors are white for monitoring, yellow for opening soon, green for open, orange for closing, and red for errors.
 
 [h2]Sound Alerts[/h2]
 
@@ -208,41 +132,22 @@ The sound plays once when the system transitions into a usable jump window. Cool
 
 [h2]Important Notes[/h2]
 
-[list]
-[*]This mod uses RSS logical orbital coordinates, not physical planet voxel or GPS positions.
-[*]Jump geometry is an estimate and assumes favorable radial alignment.
-[*]Obstacles, gravity restrictions, and the final RSS transition must still be checked manually.
-[*]Static grids report zero usable Jump Drive range.
-[*]A fully charged grid may still lack sufficient range because Jump Drive range depends on grid mass.
-[*]Nyph-Ea currently uses an approximate orbital model.
-[*]The mod updates displays approximately every five seconds.
-[/list]
+The mod uses RSS logical coordinates rather than physical planet or GPS positions. Jump geometry assumes favorable radial alignment; obstacles, gravity restrictions, and the final RSS transition must still be checked manually. Static grids report zero usable range, and Nyph-Ea remains approximate.
 
-[h2]Torch And Dedicated Servers[/h2]
+[h2]Performance[/h2]
 
-Add this Workshop item to the world's mod list and restart the server.
-
-Ensure the server also has:
+The navigator limits its server-side simulation cost:
 
 [list]
-[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3351055036]Real Solar Systems[/url]
-[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3367704014]Trithorne Cluster[/url]
-[*]All required dependencies listed on the Real Solar Systems Workshop page
+[*]Displays are evaluated approximately every five seconds, not every simulation tick.
+[*]Calculations, alerts, and rendering run only when a player is within [code]PanelUpdateRadiusKm[/code].
+[*]The default proximity radius is [code]0.2 km[/code] (200 m), matching the distance at which a player is normally close enough to use the display.
+[*]When no players are connected, the mod skips the global entity scans entirely.
+[*]When no tagged panels are found, discovery backs off to occasional retries.
+[*]A panel outside the proximity radius retains its last displayed content until a player comes close again.
 [/list]
 
-The world should be created and configured locally before deployment when using the Real Solar Systems editor. The editor does not run on dedicated servers.
-
-[h2]TO-DO[/h2]
-
-Support for the other three official Real Solar Systems preset worlds is planned:
-
-[list]
-[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3381884325]Vanilla Systems[/url]
-[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3352227682]The Solar System (Scale Model)[/url]
-[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3599864372]Skoll Sector[/url]
-[/list]
-
-Each preset requires its own validated body catalog, orbital hierarchy, model epoch, and in-game comparison against the RSS HUD.
+Increase [code]PanelUpdateRadiusKm[/code] if remote players need to see a panel from farther away. Larger values increase the number of panels that may perform orbital calculations during each update.
 
 [h2]Troubleshooting[/h2]
 
