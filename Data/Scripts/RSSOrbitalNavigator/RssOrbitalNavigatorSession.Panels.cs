@@ -14,6 +14,7 @@ using ModTerminalBlock = Sandbox.ModAPI.IMyTerminalBlock;
 using ModTextPanel = Sandbox.ModAPI.IMyTextPanel;
 using ModTextSurfaceProvider = Sandbox.ModAPI.IMyTextSurfaceProvider;
 using ModJumpDrive = Sandbox.ModAPI.IMyJumpDrive;
+using ModButtonPanel = SpaceEngineers.Game.ModAPI.IMyButtonPanel;
 using ModSoundBlock = SpaceEngineers.Game.ModAPI.IMySoundBlock;
 using TextSurface = Sandbox.ModAPI.Ingame.IMyTextSurface;
 using VoxelBase = VRage.ModAPI.IMyVoxelBase;
@@ -28,6 +29,7 @@ namespace Boquetas.RssOrbitalNavigator
             _largeVoxels.Clear();
             _processedBlocks.Clear();
             _cycleCache.Clear();
+            _navigationPanels.Clear();
 
             MyAPIGateway.Entities.GetEntities(_entities, entity =>
                 entity is IMyCubeGrid && !entity.MarkedForClose && !entity.Closed);
@@ -62,7 +64,10 @@ namespace Boquetas.RssOrbitalNavigator
                     if (block.CustomName == null || block.CustomName.IndexOf(PanelTag, StringComparison.OrdinalIgnoreCase) < 0)
                         continue;
 
+                    _navigationPanels[block.EntityId] = block;
+
                     PanelConfig config = PanelConfig.Parse(block.CustomData);
+                    ApplyRouteSelection(block, config);
                     TextSurface surface = GetSurface(block, config.SurfaceIndex);
                     if (surface == null)
                         continue;
@@ -91,6 +96,132 @@ namespace Boquetas.RssOrbitalNavigator
                     AlertResult alert = ApplyAlerts(block, config, snapshot);
                     WritePanel(surface, config, snapshot, alert);
                 }
+            }
+
+            RegisterNavigationButtons();
+        }
+
+        private void RegisterNavigationButtons()
+        {
+            foreach (ModTerminalBlock panel in _navigationPanels.Values)
+            {
+                IMyGridTerminalSystem terminalSystem = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(panel.CubeGrid);
+                if (terminalSystem == null)
+                    continue;
+
+                _terminalBlocks.Clear();
+                terminalSystem.GetBlocks(_terminalBlocks);
+                foreach (ModTerminalBlock block in _terminalBlocks)
+                {
+                    ModButtonPanel buttonPanel = block as ModButtonPanel;
+                    if (buttonPanel == null || buttonPanel.CustomName == null
+                        || !HasNavigationAction(buttonPanel.CustomName))
+                        continue;
+                    if (_navigationButtons.ContainsKey(buttonPanel.EntityId))
+                        continue;
+
+                    Action<int> handler = button => NavigationButtonPressed(buttonPanel, button);
+                    buttonPanel.ButtonPressed += handler;
+                    _navigationButtons[buttonPanel.EntityId] = buttonPanel;
+                    _navigationButtonHandlers[buttonPanel.EntityId] = handler;
+                }
+            }
+        }
+
+        private void NavigationButtonPressed(ModButtonPanel buttonPanel, int button)
+        {
+            if (buttonPanel == null || buttonPanel.CustomName == null)
+                return;
+
+            string name = buttonPanel.CustomName;
+            bool multi = name.IndexOf("[RSSNAV MULTI", StringComparison.OrdinalIgnoreCase) >= 0
+                || name.IndexOf("[RSSNAV CONTROLS", StringComparison.OrdinalIgnoreCase) >= 0;
+            bool source = name.IndexOf("[RSSNAV SRC", StringComparison.OrdinalIgnoreCase) >= 0;
+            bool destination = name.IndexOf("[RSSNAV DST", StringComparison.OrdinalIgnoreCase) >= 0;
+            bool next = name.IndexOf("NEXT", StringComparison.OrdinalIgnoreCase) >= 0;
+            bool previous = name.IndexOf("PREV", StringComparison.OrdinalIgnoreCase) >= 0;
+            bool reset = name.IndexOf("RESET", StringComparison.OrdinalIgnoreCase) >= 0;
+            if (multi)
+            {
+                source = button == 0 || button == 1;
+                destination = button == 2 || button == 3;
+                previous = button == 0 || button == 2;
+                next = button == 1 || button == 3;
+            }
+            else if ((!source && !destination && !reset) || (!next && !previous && !reset))
+                return;
+
+            foreach (ModTerminalBlock panel in _navigationPanels.Values)
+            {
+                if (panel == null || !SameConstruct(panel, buttonPanel))
+                    continue;
+
+                PanelConfig config = PanelConfig.Parse(panel.CustomData);
+                RouteSelection selection;
+                if (!_routeSelections.TryGetValue(panel.EntityId, out selection))
+                {
+                    selection = new RouteSelection { SourceBody = config.SourceBody, TargetBody = config.TargetBody };
+                    _routeSelections[panel.EntityId] = selection;
+                }
+
+                if (reset)
+                {
+                    selection.SourceBody = config.SourceBody;
+                    selection.TargetBody = config.TargetBody;
+                }
+                else if (source)
+                    selection.SourceBody = CycleBody(selection.SourceBody, next ? 1 : -1);
+                else if (destination)
+                    selection.TargetBody = CycleBody(selection.TargetBody, next ? 1 : -1);
+            }
+        }
+
+        private void ApplyRouteSelection(ModTerminalBlock panel, PanelConfig config)
+        {
+            RouteSelection selection;
+            if (!_routeSelections.TryGetValue(panel.EntityId, out selection))
+            {
+                selection = new RouteSelection { SourceBody = config.SourceBody, TargetBody = config.TargetBody };
+                _routeSelections[panel.EntityId] = selection;
+            }
+
+            config.SourceBody = selection.SourceBody;
+            config.TargetBody = selection.TargetBody;
+        }
+
+        private string CycleBody(string current, int direction)
+        {
+            if (_bodyNames.Count == 0)
+                return current;
+            int index = _bodyNames.IndexOf(current);
+            if (index < 0)
+                index = 0;
+            index = (index + direction) % _bodyNames.Count;
+            if (index < 0)
+                index += _bodyNames.Count;
+            return _bodyNames[index];
+        }
+
+        private static bool HasNavigationAction(string name)
+        {
+            return name.IndexOf("SRC NEXT", StringComparison.OrdinalIgnoreCase) >= 0
+                || name.IndexOf("SRC PREV", StringComparison.OrdinalIgnoreCase) >= 0
+                || name.IndexOf("DST NEXT", StringComparison.OrdinalIgnoreCase) >= 0
+                || name.IndexOf("DST PREV", StringComparison.OrdinalIgnoreCase) >= 0
+                || name.IndexOf("RESET", StringComparison.OrdinalIgnoreCase) >= 0
+                || name.IndexOf("[RSSNAV MULTI", StringComparison.OrdinalIgnoreCase) >= 0
+                || name.IndexOf("[RSSNAV CONTROLS", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private static bool SameConstruct(ModTerminalBlock first, ModTerminalBlock second)
+        {
+            try
+            {
+                return first.IsSameConstructAs(second);
+            }
+            catch
+            {
+                return first.CubeGrid == second.CubeGrid;
             }
         }
 

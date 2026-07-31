@@ -14,6 +14,7 @@ using ModTerminalBlock = Sandbox.ModAPI.IMyTerminalBlock;
 using ModTextPanel = Sandbox.ModAPI.IMyTextPanel;
 using ModTextSurfaceProvider = Sandbox.ModAPI.IMyTextSurfaceProvider;
 using ModJumpDrive = Sandbox.ModAPI.IMyJumpDrive;
+using ModButtonPanel = SpaceEngineers.Game.ModAPI.IMyButtonPanel;
 using ModSoundBlock = SpaceEngineers.Game.ModAPI.IMySoundBlock;
 using TextSurface = Sandbox.ModAPI.Ingame.IMyTextSurface;
 using VoxelBase = VRage.ModAPI.IMyVoxelBase;
@@ -35,6 +36,11 @@ namespace Boquetas.RssOrbitalNavigator
         private readonly Dictionary<string, BodyDef> _bodies = new Dictionary<string, BodyDef>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, Snapshot> _cycleCache = new Dictionary<string, Snapshot>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<long, PanelAlertMemory> _alertMemory = new Dictionary<long, PanelAlertMemory>();
+        private readonly Dictionary<long, RouteSelection> _routeSelections = new Dictionary<long, RouteSelection>();
+        private readonly Dictionary<long, ModTerminalBlock> _navigationPanels = new Dictionary<long, ModTerminalBlock>();
+        private readonly Dictionary<long, ModButtonPanel> _navigationButtons = new Dictionary<long, ModButtonPanel>();
+        private readonly Dictionary<long, Action<int>> _navigationButtonHandlers = new Dictionary<long, Action<int>>();
+        private readonly List<string> _bodyNames = new List<string>();
 
         private int _frameCounter;
         private bool _started;
@@ -76,12 +82,29 @@ namespace Boquetas.RssOrbitalNavigator
             _bodies.Clear();
             _cycleCache.Clear();
             _alertMemory.Clear();
+            foreach (KeyValuePair<long, ModButtonPanel> entry in _navigationButtons)
+            {
+                try
+                {
+                    entry.Value.ButtonPressed -= _navigationButtonHandlers[entry.Key];
+                }
+                catch
+                {
+                }
+            }
+            _navigationButtons.Clear();
+            _navigationButtonHandlers.Clear();
+            _navigationPanels.Clear();
+            _routeSelections.Clear();
+            _bodyNames.Clear();
         }
 
         private void BuildCatalog()
         {
             _bodies.Clear();
+            _bodyNames.Clear();
             _bodies["Trithorne"] = new BodyDef("Trithorne", null, 0, 0, 0, 0, 0, 0, 0, 20000000, 0);
+            _bodyNames.Add("Trithorne");
 
             AddBody("Rennix", "Trithorne", 47170948, 0.33898634, -18.832943, 0, 0, 4750505, 3.2466464, 1250000, 0);
             AddBody("Tropol", "Rennix", 2996704.2, 0, 0, 0, 0, 38856.766, 5.248836, 499999.84, 100000.17);
@@ -108,6 +131,7 @@ namespace Boquetas.RssOrbitalNavigator
             _bodies[name] = new BodyDef(name, parent, semimajorAxis, eccentricity,
                 pitchDegrees, rollDegrees, yawDegrees, periodSeconds, phaseOffsetRadians,
                 orbitZoneRadiusMeters, bodyRadiusMeters);
+            _bodyNames.Add(name);
         }
     }
 }

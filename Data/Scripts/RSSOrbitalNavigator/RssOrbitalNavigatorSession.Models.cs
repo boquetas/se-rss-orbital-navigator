@@ -177,6 +177,12 @@ namespace Boquetas.RssOrbitalNavigator
             public DateTime LastSoundAt = DateTime.MinValue;
         }
 
+        private sealed class RouteSelection
+        {
+            public string SourceBody;
+            public string TargetBody;
+        }
+
         private sealed class AlertResult
         {
             public AlertLevel Level;

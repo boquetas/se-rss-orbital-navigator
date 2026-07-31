@@ -70,7 +70,7 @@ namespace Boquetas.RssOrbitalNavigator
             float unit = Math.Min(size.X / 512f, size.Y / 288f);
             float fontUnit = GetDashboardFontUnit(unit, config);
             float margin = 14f * unit;
-            float headerHeight = 56f * unit;
+            float headerHeight = 82f * unit;
             float gap = 9f * unit;
             Color accent = config.ColorAlertsEnabled ? alert.FontColor : DashboardAccent;
             Vector2 topLeft = origin + new Vector2(margin, margin);
@@ -79,6 +79,8 @@ namespace Boquetas.RssOrbitalNavigator
             AddText(frame, Shorten(config.Title, 28), topLeft, 0.62f * fontUnit, DashboardMuted, TextAlignment.LEFT);
             AddText(frame, Shorten(snapshot.SourceName, 8) + " > " + Shorten(snapshot.TargetName, 8),
                 topLeft + new Vector2(0f, 22f * unit), 1.02f * fontUnit, DashboardText, TextAlignment.LEFT);
+            AddText(frame, "SRC -/+   DST -/+", topLeft + new Vector2(0f, 48f * unit),
+                0.46f * fontUnit, DashboardMuted, TextAlignment.LEFT);
             AddBadge(frame, FormatBadgeText(alert.Level),
                 origin + new Vector2(size.X - margin, margin + 16f * unit), accent, unit, fontUnit);
             AddRectangle(frame, origin + new Vector2(size.X * 0.5f, margin + headerHeight),
@@ -155,10 +157,12 @@ namespace Boquetas.RssOrbitalNavigator
             AddText(frame, Shorten(config.Title, 30), cursor, 0.58f * fontUnit, DashboardMuted, TextAlignment.LEFT);
             AddText(frame, Shorten(snapshot.SourceName, 12) + " > " + Shorten(snapshot.TargetName, 12),
                 cursor + new Vector2(0f, 23f * unit), 0.92f * fontUnit, DashboardText, TextAlignment.LEFT);
+            AddText(frame, "SRC -/+   DST -/+", cursor + new Vector2(0f, 50f * unit),
+                0.45f * fontUnit, DashboardMuted, TextAlignment.LEFT);
             AddBadge(frame, FormatBadgeText(alert.Level),
                 origin + new Vector2(size.X - margin, margin + 11f * unit), accent, unit, fontUnit);
 
-            cursor.Y += 60f * unit;
+            cursor.Y += 88f * unit;
             AddCard(frame, cursor, new Vector2(width, 116f * unit), unit);
             AddText(frame, "ESTIMATED JUMP", cursor + new Vector2(12f, 11f) * unit,
                 0.5f * fontUnit, DashboardMuted, TextAlignment.LEFT);

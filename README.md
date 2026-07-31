@@ -52,6 +52,19 @@ This is a navigation estimate. It assumes a favorable departure direction from t
 
 Set `DisplayMode=Text` to use the detailed legacy text report. Dashboard mode scales automatically to the surface dimensions, and `FontSize` can reduce its typography without changing the card layout. The default and dashboard maximum is `0.55`; cockpit surfaces may work better around `0.35` to `0.45`. Text mode continues to accept larger values.
 
+### Physical route controls
+
+Route selection can be changed without editing Custom Data. Add one Button Panel for each action and include the following tag in its name:
+
+- `[RSSNAV SRC NEXT]` or `[RSSNAV SRC PREV]`
+- `[RSSNAV DST NEXT]` or `[RSSNAV DST PREV]`
+- `[RSSNAV RESET]`
+- `[RSSNAV MULTI]` for one four-button panel
+
+Any button press on a tagged Button Panel performs that action. Controls affect all `[RSSNAV]` panels on the same construct. `SourceBody` and `TargetBody` remain the startup and reset defaults.
+
+For `[RSSNAV MULTI]`, buttons are mapped as follows: button 1 source previous, button 2 source next, button 3 destination previous, and button 4 destination next. The game reports these button indexes as 0 through 3 internally. A reset button remains a separate `[RSSNAV RESET]` panel.
+
 Dashboard status badges use these colors:
 
 - cyan/white: normal monitoring;
