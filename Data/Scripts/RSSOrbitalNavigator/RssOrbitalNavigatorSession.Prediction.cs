@@ -155,9 +155,12 @@ namespace Boquetas.RssOrbitalNavigator
             bool opensSoon = snapshot.JumpInfo.RangeMeters > 0
                 && snapshot.JumpWindow.Found
                 && !snapshot.JumpWindow.IsOpenNow
+                && (!snapshot.Geometry.UsesLogicalShipPosition
+                    || (snapshot.Geometry.HasShipTrajectory && snapshot.JumpWindow.OpenSecondsFromNow > 0.0))
                 && snapshot.JumpWindow.OpenSecondsFromNow <= config.AlertLeadMinutes * 60.0;
 
-            if (snapshot.Geometry.UsesLogicalShipPosition && snapshot.JumpInfo.RangeMeters > 0 && !windowOpen)
+            if (snapshot.Geometry.UsesLogicalShipPosition && snapshot.JumpInfo.RangeMeters > 0
+                && !windowOpen && !opensSoon)
             {
                 result.Level = AlertLevel.OutOfRange;
                 result.FontColor = config.ErrorColor;

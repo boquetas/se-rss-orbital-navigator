@@ -22,6 +22,7 @@ Defaults:
 
 - `NavigationMode=Auto`: uses planetary behavior near the configured source body and automatically falls back to deep-space behavior when no plausible source voxel is nearby.
 - `SourceRadiusMode=Auto`: finds the nearest large planet voxel and measures the LCD/grid position from its center.
+- `ShipForecastMinutes=30`: short-horizon ship trajectory forecast used after two RSS position samples are available.
 - `TargetArrivalMode=OrbitZone`: targets a point inside the target body's RSS orbit zone.
 - `TargetSafetyMarginKm=25`: keeps the target point 25 km inside the zone edge.
 
@@ -34,7 +35,7 @@ This is a navigation estimate. It assumes a favorable departure direction from t
 - `DeepSpace`: skips source voxel detection and uses zero source allowance.
 
 The dashboard and text display show both the configured mode and the effective mode. For example, `AUTO DEEP SPACE` means automatic detection selected deep-space behavior.
-When the RSS logical-position API is available, deep-space mode uses the ship's converted logical proxy position and performs a current ship-to-target range check. It does not forecast future windows because ship trajectory is not modeled yet. If the API or target body is unavailable, it shows an amber `POSITION UNKNOWN` state, suppresses predictions and sound alerts, and labels body-to-body values as reference-only.
+When the RSS logical-position API is available, deep-space mode uses the ship's converted logical proxy position and performs a current ship-to-target range check. After two samples, it estimates relative required-distance movement over `ShipForecastMinutes`. If the API or target body is unavailable, it shows an amber `POSITION UNKNOWN` state, suppresses predictions and sound alerts, and labels body-to-body values as reference-only.
 
 ### SourceRadiusMode
 

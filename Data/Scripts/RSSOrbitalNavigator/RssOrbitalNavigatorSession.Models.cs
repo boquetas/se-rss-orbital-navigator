@@ -148,6 +148,8 @@ namespace Boquetas.RssOrbitalNavigator
             public bool UsesLogicalShipPosition;
             public bool CanForecastShipPosition;
             public double ShipToTargetDistanceMeters;
+            public double ShipRequiredRateMetersPerSecond;
+            public bool HasShipTrajectory;
             public string SourceDescription;
             public string TargetDescription;
             public string Warning;
@@ -190,6 +192,16 @@ namespace Boquetas.RssOrbitalNavigator
             public bool WasIdeal;
             public AlertLevel LastLevel;
             public DateTime LastSoundAt = DateTime.MinValue;
+        }
+
+        private sealed class ShipTrajectoryMemory
+        {
+            public string RouteKey;
+            public bool HasSample;
+            public bool HasRate;
+            public DateTime LastSampleTime;
+            public double LastRequiredDistanceMeters;
+            public double RequiredRateMetersPerSecond;
         }
 
         private sealed class RouteSelection

@@ -244,9 +244,26 @@ namespace Boquetas.RssOrbitalNavigator
             }
             else if (snapshot.Geometry.UsesLogicalShipPosition)
             {
-                state = snapshot.JumpWindow.IsOpenNow ? "CURRENTLY REACHABLE" : "OUT OF RANGE";
-                detail = "CURRENT SHIP-TO-TARGET CHECK";
-                stateColor = snapshot.JumpWindow.IsOpenNow ? accent : DashboardDanger;
+                if (snapshot.JumpWindow.IsOpenNow)
+                {
+                    state = "CURRENTLY REACHABLE";
+                    detail = snapshot.JumpWindow.HasClose
+                        ? "CLOSES IN " + FormatDashboardDuration(snapshot.JumpWindow.CloseSecondsFromNow)
+                        : "CURRENT SHIP-TO-TARGET CHECK";
+                    stateColor = accent;
+                }
+                else if (snapshot.Geometry.HasShipTrajectory && snapshot.JumpWindow.Found)
+                {
+                    state = "OPENS IN " + FormatDashboardDuration(snapshot.JumpWindow.OpenSecondsFromNow);
+                    detail = "SHIP TRAJECTORY FORECAST";
+                    stateColor = accent;
+                }
+                else
+                {
+                    state = "OUT OF RANGE";
+                    detail = "CURRENT SHIP-TO-TARGET CHECK";
+                    stateColor = DashboardDanger;
+                }
             }
             else if (snapshot.JumpInfo.RangeMeters <= 0.0)
             {

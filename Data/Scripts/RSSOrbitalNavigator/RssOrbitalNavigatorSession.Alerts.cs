@@ -237,8 +237,22 @@ namespace Boquetas.RssOrbitalNavigator
             }
             else if (snapshot.Geometry.UsesLogicalShipPosition)
             {
-                text.Append("Current ship-to-target check: ")
-                    .AppendLine(snapshot.JumpWindow.IsOpenNow ? "REACHABLE" : "OUT OF RANGE");
+                if (snapshot.JumpWindow.IsOpenNow)
+                {
+                    text.Append("Current ship-to-target check: REACHABLE");
+                    if (snapshot.JumpWindow.HasClose)
+                        text.Append(" (closes in ").Append(FormatDuration(snapshot.JumpWindow.CloseSecondsFromNow)).Append(')');
+                    text.AppendLine();
+                }
+                else if (snapshot.Geometry.HasShipTrajectory && snapshot.JumpWindow.Found)
+                {
+                    text.Append("Ship trajectory forecast: opens in ")
+                        .AppendLine(FormatDuration(snapshot.JumpWindow.OpenSecondsFromNow));
+                }
+                else
+                {
+                    text.AppendLine("Current ship-to-target check: OUT OF RANGE");
+                }
             }
             else if (snapshot.JumpInfo.RangeMeters > 0)
             {

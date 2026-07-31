@@ -83,6 +83,7 @@ namespace Boquetas.RssOrbitalNavigator
                         + config.TimeOffsetSeconds.ToString("0.###", CultureInfo.InvariantCulture) + "|"
                         + config.ModelEpoch.Ticks.ToString(CultureInfo.InvariantCulture) + "|"
                         + config.PredictionHours.ToString("0.###", CultureInfo.InvariantCulture) + "|"
+                        + config.ShipForecastMinutes.ToString("0.###", CultureInfo.InvariantCulture) + "|"
                         + block.EntityId.ToString(CultureInfo.InvariantCulture) + "|"
                         + jumpInfo.Mode.ToString() + "|"
                         + jumpInfo.RangeMeters.ToString("0.###", CultureInfo.InvariantCulture) + "|"

@@ -8,6 +8,7 @@
 - Deep-space reference distances are now labeled explicitly and no longer rendered as an error state.
 - Added RSS API integration for current deep-space ship-to-target range checks.
 - Deep-space current checks no longer show a future opening alert without ship trajectory data.
+- Added short-horizon ship trajectory sampling and forecast windows after two RSS position samples.
 
 ## 0.5.0
 - Added physical Button Panel route controls for cycling source and destination bodies.

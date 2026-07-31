@@ -39,6 +39,8 @@ namespace Boquetas.RssOrbitalNavigator
                 ? geometry.ShipToTargetDistanceMeters
                 : DistanceAt(source, target, modelSeconds);
             double requiredJumpDistance = RequiredJumpDistance(centerDistance, geometry);
+            if (geometry.UsesLogicalShipPosition)
+                UpdateShipTrajectory(panelBlock.EntityId, config, requiredJumpDistance, sampleTime, geometry);
 
             double derivativeWindow = 10.0;
             double before = DistanceAt(source, target, modelSeconds - derivativeWindow);
@@ -69,6 +71,27 @@ namespace Boquetas.RssOrbitalNavigator
             {
                 jumpWindow.Found = true;
                 jumpWindow.IsOpenNow = requiredJumpDistance <= jumpInfo.RangeMeters;
+                if (!jumpWindow.IsOpenNow && geometry.HasShipTrajectory
+                    && geometry.ShipRequiredRateMetersPerSecond < 0.0)
+                {
+                    double secondsToOpen = (requiredJumpDistance - jumpInfo.RangeMeters)
+                        / -geometry.ShipRequiredRateMetersPerSecond;
+                    if (secondsToOpen <= config.ShipForecastMinutes * 60.0)
+                        jumpWindow.OpenSecondsFromNow = Math.Max(0.0, secondsToOpen);
+                    else
+                        jumpWindow.Found = false;
+                }
+                else if (jumpWindow.IsOpenNow && geometry.HasShipTrajectory
+                    && geometry.ShipRequiredRateMetersPerSecond > 0.0)
+                {
+                    double secondsToClose = (jumpInfo.RangeMeters - requiredJumpDistance)
+                        / geometry.ShipRequiredRateMetersPerSecond;
+                    if (secondsToClose <= config.ShipForecastMinutes * 60.0)
+                    {
+                        jumpWindow.CloseSecondsFromNow = Math.Max(0.0, secondsToClose);
+                        jumpWindow.HasClose = true;
+                    }
+                }
             }
             else if (geometry.CanForecastShipPosition && jumpInfo.RangeMeters > 0)
                 jumpWindow = FindJumpWindow(source, target, modelSeconds,
@@ -93,6 +116,43 @@ namespace Boquetas.RssOrbitalNavigator
                 ModelSeconds = modelSeconds,
                 SampleTime = sampleTime
             };
+        }
+
+        private void UpdateShipTrajectory(long panelId, PanelConfig config, double requiredJumpDistance,
+            DateTime sampleTime, NavigationGeometry geometry)
+        {
+            ShipTrajectoryMemory memory;
+            if (!_shipTrajectoryMemory.TryGetValue(panelId, out memory))
+            {
+                memory = new ShipTrajectoryMemory();
+                _shipTrajectoryMemory[panelId] = memory;
+            }
+
+            string routeKey = config.SourceBody + "|" + config.TargetBody;
+            if (!string.Equals(memory.RouteKey, routeKey, StringComparison.OrdinalIgnoreCase))
+            {
+                memory.RouteKey = routeKey;
+                memory.HasSample = false;
+                memory.HasRate = false;
+            }
+
+            if (memory.HasSample)
+            {
+                double seconds = (sampleTime - memory.LastSampleTime).TotalSeconds;
+                if (seconds >= 1.0 && seconds <= 600.0)
+                {
+                    memory.RequiredRateMetersPerSecond = (requiredJumpDistance
+                        - memory.LastRequiredDistanceMeters) / seconds;
+                    memory.HasRate = true;
+                }
+            }
+
+            memory.LastSampleTime = sampleTime;
+            memory.LastRequiredDistanceMeters = requiredJumpDistance;
+            memory.HasSample = true;
+            geometry.HasShipTrajectory = memory.HasRate;
+            geometry.ShipRequiredRateMetersPerSecond = memory.RequiredRateMetersPerSecond;
+            geometry.CanForecastShipPosition = memory.HasRate;
         }
 
         private NavigationGeometry BuildNavigationGeometry(ModTerminalBlock panelBlock, BodyDef source,

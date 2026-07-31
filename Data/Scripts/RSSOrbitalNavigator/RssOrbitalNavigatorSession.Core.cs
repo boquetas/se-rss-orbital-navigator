@@ -37,6 +37,7 @@ namespace Boquetas.RssOrbitalNavigator
         private readonly Dictionary<string, BodyDef> _bodies = new Dictionary<string, BodyDef>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, Snapshot> _cycleCache = new Dictionary<string, Snapshot>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<long, PanelAlertMemory> _alertMemory = new Dictionary<long, PanelAlertMemory>();
+        private readonly Dictionary<long, ShipTrajectoryMemory> _shipTrajectoryMemory = new Dictionary<long, ShipTrajectoryMemory>();
         private readonly Dictionary<long, RouteSelection> _routeSelections = new Dictionary<long, RouteSelection>();
         private readonly Dictionary<long, ModTerminalBlock> _navigationPanels = new Dictionary<long, ModTerminalBlock>();
         private readonly Dictionary<long, ModButtonPanel> _navigationButtons = new Dictionary<long, ModButtonPanel>();
@@ -85,6 +86,7 @@ namespace Boquetas.RssOrbitalNavigator
             _bodies.Clear();
             _cycleCache.Clear();
             _alertMemory.Clear();
+            _shipTrajectoryMemory.Clear();
             foreach (KeyValuePair<long, ModButtonPanel> entry in _navigationButtons)
             {
                 try
