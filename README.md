@@ -1,4 +1,4 @@
-# RSS Orbital Navigator 0.5.0
+# RSS Orbital Navigator 0.6.0
 
 Session mod for Space Engineers worlds using the Trithorne Cluster RSS configuration.
 
@@ -103,6 +103,20 @@ The model uses `MyAPIGateway.Session.GameDateTime - ModelEpoch`. The tested Trit
 ## Diagnostics
 
 `ShowDiagnostics=false` keeps the LCD compact. Set it to `true` to show model time, epoch and the favorable-alignment warning on the panel.
+
+## Release Process
+
+Releases use the `develop` to `main` workflow:
+
+1. Update the version in the first heading of `README.md`.
+2. Move the completed entries in `CHANGELOG.md` from `Unreleased` into the new version section.
+3. Update `SteamWorkshopDescription.txt`, `CustomData.example.ini`, and README documentation as needed.
+4. Run `git diff --check` and validate that exactly one session-component descriptor exists.
+5. Commit and push `develop`.
+6. Merge `develop` into `main` and push `main`.
+7. Confirm the Release workflow creates `v<version>` and `RSSOrbitalNavigator-<version>.zip`.
+
+The `develop` workflow updates the prerelease `develop-latest`. The `main` workflow reads the version from `README.md` and refuses to reuse an existing release tag.
 
 ## Repository layout
 

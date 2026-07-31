@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 0.6.0
 - Added automatic planetary/deep-space navigation mode detection.
 - Added `NavigationMode=Planetary` and `NavigationMode=DeepSpace` manual overrides.
 - Added effective navigation mode labels to dashboard, text, and diagnostics output.
@@ -9,6 +11,7 @@
 - Added RSS API integration for current deep-space ship-to-target range checks.
 - Deep-space current checks no longer show a future opening alert without ship trajectory data.
 - Added short-horizon ship trajectory sampling and forecast windows after two RSS position samples.
+- Deep-space route headers now identify the ship as the origin instead of showing the configured source planet.
 
 ## 0.5.0
 - Added physical Button Panel route controls for cycling source and destination bodies.
