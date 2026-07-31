@@ -30,7 +30,7 @@ namespace Boquetas.RssOrbitalNavigator
             public float FontSize = 0.55f;
             public double PredictionHours = 48.0;
             public double ShipForecastMinutes = 30.0;
-            public double PanelUpdateRadiusKm = 5.0;
+            public double PanelUpdateRadiusKm = 0.2;
             public double TimeOffsetSeconds;
             public DateTime ModelEpoch = new DateTime(2081, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
             public JumpRangeMode RangeMode = JumpRangeMode.Auto;

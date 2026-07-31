@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+## 0.8.0
+- Changed the default `PanelUpdateRadiusKm` from 5 km to 0.2 km (200 m) when not configured.
+
 ## 0.7.0
 - Added player-proximity filtering for panel calculations and rendering through `PanelUpdateRadiusKm`.
 - Skips global entity scans when no players are connected.
