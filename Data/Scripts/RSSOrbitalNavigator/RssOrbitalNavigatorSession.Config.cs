@@ -26,6 +26,7 @@ namespace Boquetas.RssOrbitalNavigator
         {
             public string SourceBody = "Luburn";
             public string TargetBody = "Tropol";
+            public string RouteGroup;
             public int SurfaceIndex;
             public float FontSize = 0.55f;
             public double PredictionHours = 48.0;
@@ -92,6 +93,8 @@ namespace Boquetas.RssOrbitalNavigator
                     else if (string.Equals(key, "TargetBody", StringComparison.OrdinalIgnoreCase)
                         || string.Equals(key, "TargetGPS", StringComparison.OrdinalIgnoreCase))
                         config.TargetBody = value;
+                    else if (string.Equals(key, "RouteGroup", StringComparison.OrdinalIgnoreCase))
+                        config.RouteGroup = value;
                     else if (string.Equals(key, "Surface", StringComparison.OrdinalIgnoreCase))
                         TryParseInt(value, ref config.SurfaceIndex);
                     else if (string.Equals(key, "FontSize", StringComparison.OrdinalIgnoreCase))
@@ -168,6 +171,41 @@ namespace Boquetas.RssOrbitalNavigator
                 config.AlertLeadMinutes = Math.Max(0, Math.Min(1440.0, config.AlertLeadMinutes));
                 config.SoundCooldownSeconds = Math.Max(0, config.SoundCooldownSeconds);
                 return config;
+            }
+
+            public static string ParseRouteGroup(string customData)
+            {
+                if (string.IsNullOrWhiteSpace(customData))
+                    return string.Empty;
+
+                bool hasSection = false;
+                bool inSection = false;
+                string[] lines = customData.Replace("\r", string.Empty).Split('\n');
+                foreach (string rawLine in lines)
+                {
+                    string line = rawLine.Trim();
+                    if (line.Length == 0 || line.StartsWith(";") || line.StartsWith("#"))
+                        continue;
+                    if (line.StartsWith("[") && line.EndsWith("]"))
+                    {
+                        hasSection = true;
+                        string section = line.Substring(1, line.Length - 2).Trim();
+                        inSection = string.Equals(section, "RSSNAV", StringComparison.OrdinalIgnoreCase);
+                        continue;
+                    }
+                    if (hasSection && !inSection)
+                        continue;
+
+                    int equalsIndex = line.IndexOf('=');
+                    if (equalsIndex <= 0)
+                        continue;
+                    string key = line.Substring(0, equalsIndex).Trim();
+                    if (!string.Equals(key, "RouteGroup", StringComparison.OrdinalIgnoreCase))
+                        continue;
+                    return line.Substring(equalsIndex + 1).Trim();
+                }
+
+                return string.Empty;
             }
 
             private static JumpRangeMode ParseJumpRangeMode(string value)

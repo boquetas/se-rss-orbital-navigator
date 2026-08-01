@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.9.1
+- Added optional `RouteGroup` filtering so Button Panels can control independent LCD route stations on the same construct.
+- Fixed manual `SourceBody` and `TargetBody` changes being overridden by cached button selections.
+- Reduced repeated world and terminal-block discovery by caching grids and refreshing discovery periodically.
+
 ## 0.9.0
 - Reworked the Workshop description to fit the platform character limit while retaining setup and performance guidance.
 

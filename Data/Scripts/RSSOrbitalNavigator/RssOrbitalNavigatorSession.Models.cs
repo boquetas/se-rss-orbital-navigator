@@ -208,6 +208,15 @@ namespace Boquetas.RssOrbitalNavigator
         {
             public string SourceBody;
             public string TargetBody;
+            public string ConfiguredSourceBody;
+            public string ConfiguredTargetBody;
+        }
+
+        private sealed class GridCache
+        {
+            public IMyCubeGrid Grid;
+            public readonly List<ModTerminalBlock> Blocks = new List<ModTerminalBlock>();
+            public readonly List<ModTerminalBlock> NavigationPanels = new List<ModTerminalBlock>();
         }
 
         private sealed class AlertResult

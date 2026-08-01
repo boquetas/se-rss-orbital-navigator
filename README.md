@@ -1,4 +1,4 @@
-# RSS Orbital Navigator 0.9.0
+# RSS Orbital Navigator 0.9.1
 
 Session mod for Space Engineers worlds using the Trithorne Cluster RSS configuration.
 
@@ -82,6 +82,24 @@ Route selection can be changed without editing Custom Data. Add one Button Panel
 - `[RSSNAV MULTI]` for one four-button panel
 
 Any button press on a tagged Button Panel performs that action. Controls affect all `[RSSNAV]` panels on the same construct. `SourceBody` and `TargetBody` remain the startup and reset defaults.
+
+To control only one route station, set the same `RouteGroup` in the LCD and in the Button Panel Custom Data:
+
+```ini
+; LCD Custom Data
+[RSSNAV]
+RouteGroup=Bridge
+SourceBody=Luburn
+TargetBody=Thalion
+```
+
+```ini
+; Button Panel Custom Data
+[RSSNAV]
+RouteGroup=Bridge
+```
+
+The button then changes only LCDs in the same construct with `RouteGroup=Bridge`. A button without `RouteGroup` keeps the legacy behavior and controls all RSSNAV panels on that construct.
 
 For `[RSSNAV MULTI]`, buttons are mapped as follows: button 1 source previous, button 2 source next, button 3 destination previous, and button 4 destination next. The game reports these button indexes as 0 through 3 internally. A reset button remains a separate `[RSSNAV RESET]` panel.
 

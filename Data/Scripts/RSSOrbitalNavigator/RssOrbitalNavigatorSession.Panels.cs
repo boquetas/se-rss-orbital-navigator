@@ -23,12 +23,8 @@ namespace Boquetas.RssOrbitalNavigator
 {
     public sealed partial class RssOrbitalNavigatorSession
     {
-        private void UpdatePanels()
+        private void UpdatePanels(bool discover)
         {
-            _entities.Clear();
-            _largeVoxels.Clear();
-            _rssPlanets.Clear();
-            _processedBlocks.Clear();
             _cycleCache.Clear();
             _navigationPanels.Clear();
 
@@ -37,51 +33,23 @@ namespace Boquetas.RssOrbitalNavigator
             if (_players.Count == 0)
                 return;
 
-            MyAPIGateway.Entities.GetEntities(_entities, entity =>
-                entity is IMyCubeGrid && !entity.MarkedForClose && !entity.Closed);
+            if (discover)
+                DiscoverGridsAndPlanets();
 
-            MyAPIGateway.Entities.GetEntities(_largeVoxels, entity =>
+            foreach (GridCache gridCache in _gridCaches.Values)
             {
-                if (entity == null || entity.MarkedForClose || entity.Closed)
-                    return false;
-                VoxelBase voxel = entity as VoxelBase;
-                return voxel != null && entity.WorldVolume.Radius >= 9000.0;
-            });
-
-            MyAPIGateway.Entities.GetEntities(_rssPlanets, entity =>
-                entity is Sandbox.Game.Entities.MyPlanet && !entity.MarkedForClose && !entity.Closed);
-
-            RequestRssApi();
-
-            foreach (IMyEntity entity in _entities)
-            {
-                IMyCubeGrid grid = entity as IMyCubeGrid;
-                if (grid == null)
+                if (gridCache == null || gridCache.Grid == null || gridCache.Grid.MarkedForClose
+                    || gridCache.Grid.Closed)
                     continue;
 
-                IMyGridTerminalSystem terminalSystem = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
-                if (terminalSystem == null)
-                    continue;
-
-                _terminalBlocks.Clear();
-                terminalSystem.GetBlocks(_terminalBlocks);
-
-                foreach (ModTerminalBlock block in _terminalBlocks)
+                foreach (ModTerminalBlock block in gridCache.NavigationPanels)
                 {
                     if (block == null || block.MarkedForClose || block.Closed)
                         continue;
-                    if (!_processedBlocks.Add(block.EntityId))
-                        continue;
-
-                    ModButtonPanel buttonPanel = block as ModButtonPanel;
-                    if (buttonPanel != null && buttonPanel.CustomName != null
-                        && HasNavigationAction(buttonPanel.CustomName))
-                        RegisterNavigationButton(buttonPanel);
-
-                    if (block.CustomName == null || block.CustomName.IndexOf(PanelTag, StringComparison.OrdinalIgnoreCase) < 0)
-                        continue;
 
                     _navigationPanels[block.EntityId] = block;
+                    _terminalBlocks.Clear();
+                    _terminalBlocks.AddRange(gridCache.Blocks);
 
                     PanelConfig config = PanelConfig.Parse(block.CustomData);
                     ApplyRouteSelection(block, config);
@@ -119,6 +87,60 @@ namespace Boquetas.RssOrbitalNavigator
                 }
             }
 
+        }
+
+        private void DiscoverGridsAndPlanets()
+        {
+            _entities.Clear();
+            _largeVoxels.Clear();
+            _rssPlanets.Clear();
+            _gridCaches.Clear();
+
+            MyAPIGateway.Entities.GetEntities(_entities, entity =>
+                entity is IMyCubeGrid && !entity.MarkedForClose && !entity.Closed);
+
+            MyAPIGateway.Entities.GetEntities(_largeVoxels, entity =>
+            {
+                if (entity == null || entity.MarkedForClose || entity.Closed)
+                    return false;
+                VoxelBase voxel = entity as VoxelBase;
+                return voxel != null && entity.WorldVolume.Radius >= 9000.0;
+            });
+
+            MyAPIGateway.Entities.GetEntities(_rssPlanets, entity =>
+                entity is Sandbox.Game.Entities.MyPlanet && !entity.MarkedForClose && !entity.Closed);
+
+            RequestRssApi();
+
+            foreach (IMyEntity entity in _entities)
+            {
+                IMyCubeGrid grid = entity as IMyCubeGrid;
+                if (grid == null)
+                    continue;
+
+                IMyGridTerminalSystem terminalSystem = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
+                if (terminalSystem == null)
+                    continue;
+
+                GridCache gridCache = new GridCache { Grid = grid };
+                terminalSystem.GetBlocks(gridCache.Blocks);
+                foreach (ModTerminalBlock block in gridCache.Blocks)
+                {
+                    if (block == null || block.MarkedForClose || block.Closed)
+                        continue;
+
+                    ModButtonPanel buttonPanel = block as ModButtonPanel;
+                    if (buttonPanel != null && buttonPanel.CustomName != null
+                        && HasNavigationAction(buttonPanel.CustomName))
+                        RegisterNavigationButton(buttonPanel);
+
+                    if (block.CustomName != null
+                        && block.CustomName.IndexOf(PanelTag, StringComparison.OrdinalIgnoreCase) >= 0)
+                        gridCache.NavigationPanels.Add(block);
+                }
+
+                _gridCaches[grid.EntityId] = gridCache;
+            }
         }
 
         private bool IsPlayerNearPanel(ModTerminalBlock panelBlock, double radiusKm)
@@ -161,6 +183,7 @@ namespace Boquetas.RssOrbitalNavigator
             bool next = name.IndexOf("NEXT", StringComparison.OrdinalIgnoreCase) >= 0;
             bool previous = name.IndexOf("PREV", StringComparison.OrdinalIgnoreCase) >= 0;
             bool reset = name.IndexOf("RESET", StringComparison.OrdinalIgnoreCase) >= 0;
+            string buttonRouteGroup = PanelConfig.ParseRouteGroup(buttonPanel.CustomData);
             if (multi)
             {
                 source = button == 0 || button == 1;
@@ -177,10 +200,13 @@ namespace Boquetas.RssOrbitalNavigator
                     continue;
 
                 PanelConfig config = PanelConfig.Parse(panel.CustomData);
+                if (buttonRouteGroup.Length > 0
+                    && !string.Equals(buttonRouteGroup, config.RouteGroup, StringComparison.OrdinalIgnoreCase))
+                    continue;
                 RouteSelection selection;
                 if (!_routeSelections.TryGetValue(panel.EntityId, out selection))
                 {
-                    selection = new RouteSelection { SourceBody = config.SourceBody, TargetBody = config.TargetBody };
+                    selection = CreateRouteSelection(config);
                     _routeSelections[panel.EntityId] = selection;
                 }
 
@@ -201,12 +227,33 @@ namespace Boquetas.RssOrbitalNavigator
             RouteSelection selection;
             if (!_routeSelections.TryGetValue(panel.EntityId, out selection))
             {
-                selection = new RouteSelection { SourceBody = config.SourceBody, TargetBody = config.TargetBody };
+                selection = CreateRouteSelection(config);
                 _routeSelections[panel.EntityId] = selection;
+            }
+            else if (!string.Equals(selection.ConfiguredSourceBody, config.SourceBody,
+                         StringComparison.OrdinalIgnoreCase)
+                || !string.Equals(selection.ConfiguredTargetBody, config.TargetBody,
+                         StringComparison.OrdinalIgnoreCase))
+            {
+                selection.SourceBody = config.SourceBody;
+                selection.TargetBody = config.TargetBody;
+                selection.ConfiguredSourceBody = config.SourceBody;
+                selection.ConfiguredTargetBody = config.TargetBody;
             }
 
             config.SourceBody = selection.SourceBody;
             config.TargetBody = selection.TargetBody;
+        }
+
+        private static RouteSelection CreateRouteSelection(PanelConfig config)
+        {
+            return new RouteSelection
+            {
+                SourceBody = config.SourceBody,
+                TargetBody = config.TargetBody,
+                ConfiguredSourceBody = config.SourceBody,
+                ConfiguredTargetBody = config.TargetBody
+            };
         }
 
         private string CycleBody(string current, int direction)
