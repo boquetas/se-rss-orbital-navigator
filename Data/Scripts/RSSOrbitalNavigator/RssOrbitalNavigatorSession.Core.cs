@@ -27,6 +27,7 @@ namespace Boquetas.RssOrbitalNavigator
         private const string LogPrefix = "[RSS Orbital Navigator] ";
         private const string PanelTag = "[RSSNAV]";
         private const int UpdateEveryFrames = 300;
+        private const int DiscoveryEveryFrames = 1800;
         private const int EmptyWorldRetryFrames = 3000;
         private const double GlobalTimescale = 1.0;
 
@@ -35,7 +36,6 @@ namespace Boquetas.RssOrbitalNavigator
         private readonly HashSet<IMyEntity> _rssPlanets = new HashSet<IMyEntity>();
         private readonly List<ModTerminalBlock> _terminalBlocks = new List<ModTerminalBlock>();
         private readonly List<IMyPlayer> _players = new List<IMyPlayer>();
-        private readonly HashSet<long> _processedBlocks = new HashSet<long>();
         private readonly Dictionary<string, BodyDef> _bodies = new Dictionary<string, BodyDef>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, Snapshot> _cycleCache = new Dictionary<string, Snapshot>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<long, PanelAlertMemory> _alertMemory = new Dictionary<long, PanelAlertMemory>();
@@ -44,9 +44,11 @@ namespace Boquetas.RssOrbitalNavigator
         private readonly Dictionary<long, ModTerminalBlock> _navigationPanels = new Dictionary<long, ModTerminalBlock>();
         private readonly Dictionary<long, ModButtonPanel> _navigationButtons = new Dictionary<long, ModButtonPanel>();
         private readonly Dictionary<long, Action<int>> _navigationButtonHandlers = new Dictionary<long, Action<int>>();
+        private readonly Dictionary<long, GridCache> _gridCaches = new Dictionary<long, GridCache>();
         private readonly List<string> _bodyNames = new List<string>();
 
         private int _frameCounter;
+        private int _discoveryFrameCounter;
         private int _emptyWorldFrameCounter;
         private bool _hasCompletedPanelDiscovery;
         private bool _started;
@@ -69,6 +71,7 @@ namespace Boquetas.RssOrbitalNavigator
                 return;
 
             _frameCounter = 0;
+            _discoveryFrameCounter += UpdateEveryFrames;
             if (_hasCompletedPanelDiscovery && _navigationPanels.Count == 0)
             {
                 _emptyWorldFrameCounter += UpdateEveryFrames;
@@ -84,7 +87,10 @@ namespace Boquetas.RssOrbitalNavigator
             try
             {
                 bool firstDiscovery = !_hasCompletedPanelDiscovery;
-                UpdatePanels();
+                bool discover = firstDiscovery || _discoveryFrameCounter >= DiscoveryEveryFrames;
+                UpdatePanels(discover);
+                if (discover)
+                    _discoveryFrameCounter = 0;
                 _hasCompletedPanelDiscovery = true;
                 if (firstDiscovery)
                     Log("Panel discovery found " + _navigationPanels.Count + " tagged panel(s).");
@@ -103,7 +109,6 @@ namespace Boquetas.RssOrbitalNavigator
             _rssPlanets.Clear();
             _terminalBlocks.Clear();
             _players.Clear();
-            _processedBlocks.Clear();
             _bodies.Clear();
             _cycleCache.Clear();
             _alertMemory.Clear();
@@ -121,9 +126,11 @@ namespace Boquetas.RssOrbitalNavigator
             _navigationButtons.Clear();
             _navigationButtonHandlers.Clear();
             _navigationPanels.Clear();
+            _gridCaches.Clear();
             _routeSelections.Clear();
             _bodyNames.Clear();
             _emptyWorldFrameCounter = 0;
+            _discoveryFrameCounter = 0;
             _hasCompletedPanelDiscovery = false;
             UnloadRssApi();
         }
