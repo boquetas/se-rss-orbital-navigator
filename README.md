@@ -149,3 +149,21 @@ The `develop` workflow updates the prerelease `develop-latest`. The `main` workf
 The session component is split across partial class files under `Data/Scripts/RSSOrbitalNavigator` so each source file remains manageable. Space Engineers compiles all `.cs` files in that script directory together.
 
 `SteamWorkshopDescription.txt` contains the formatted Workshop page description and should be updated with user-facing feature changes.
+
+## Local Workshop Publishing
+
+The existing Workshop item is `3774648307`. After preparing and testing a release locally, publish it with SteamCMD:
+
+```bash
+STEAMCMD=/path/to/steamcmd ./scripts/publish-workshop.sh
+```
+
+The script copies only `Data/` into a temporary Workshop content directory and uses `SteamWorkshopDescription.txt` as the item description. It asks for Steam credentials and confirmation at runtime; credentials are never stored in the repository. Use `--dry-run` to inspect the generated Workshop VDF without uploading:
+
+```bash
+./scripts/publish-workshop.sh --dry-run
+```
+
+For the first upload on an account, Steam Guard may require an interactive code. The script updates the configured existing item and does not create a new Workshop item.
+
+Install SteamCMD separately in WSL, or point `STEAMCMD` at an existing executable. The script passes only the account name; SteamCMD itself requests the password and Steam Guard code interactively.
