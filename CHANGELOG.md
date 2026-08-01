@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+## 0.9.2
+- Fixed explicit compilation against the installed Space Engineers assemblies by importing the `VRage.ModAPI` entity interfaces used by the RSS API bridge.
+
 ## 0.9.1
 - Added optional `RouteGroup` filtering so Button Panels can control independent LCD route stations on the same construct.
 - Fixed manual `SourceBody` and `TargetBody` changes being overridden by cached button selections.

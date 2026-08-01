@@ -1,4 +1,4 @@
-# RSS Orbital Navigator 0.9.1
+# RSS Orbital Navigator 0.9.2
 
 Session mod for Space Engineers worlds using the Trithorne Cluster RSS configuration.
 

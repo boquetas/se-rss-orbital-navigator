@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using VRage;
+using VRage.ModAPI;
 using VRageMath;
 
 using ModTerminalBlock = Sandbox.ModAPI.IMyTerminalBlock;
