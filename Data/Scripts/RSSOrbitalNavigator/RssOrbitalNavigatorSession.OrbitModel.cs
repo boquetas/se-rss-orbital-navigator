@@ -40,7 +40,19 @@ namespace Boquetas.RssOrbitalNavigator
                 : DistanceAt(source, target, modelSeconds);
             double requiredJumpDistance = RequiredJumpDistance(centerDistance, geometry);
             if (geometry.UsesLogicalShipPosition)
+            {
                 UpdateShipTrajectory(panelBlock.EntityId, config, requiredJumpDistance, sampleTime, geometry);
+                if (geometry.HasShipTrajectory)
+                {
+                    double margin = jumpInfo.RangeMeters - requiredJumpDistance;
+                    double rate = geometry.ShipRequiredRateMetersPerSecond;
+                    if ((margin > 0.0 && rate > 0.0) || (margin < 0.0 && rate < 0.0))
+                    {
+                        geometry.HasMarginForecast = true;
+                        geometry.SecondsToMarginChange = Math.Abs(margin / rate);
+                    }
+                }
+            }
 
             MotionStatus status = MotionStatus.Stable;
             if (geometry.UsesLogicalShipPosition)
@@ -74,28 +86,41 @@ namespace Boquetas.RssOrbitalNavigator
             JumpWindow jumpWindow = default(JumpWindow);
             if (geometry.UsesLogicalShipPosition && jumpInfo.RangeMeters > 0)
             {
-                jumpWindow.Found = true;
                 jumpWindow.IsOpenNow = requiredJumpDistance <= jumpInfo.RangeMeters;
+                jumpWindow.Found = jumpWindow.IsOpenNow;
                 if (!jumpWindow.IsOpenNow && geometry.HasShipTrajectory
                     && geometry.ShipRequiredRateMetersPerSecond < 0.0)
                 {
                     double secondsToOpen = (requiredJumpDistance - jumpInfo.RangeMeters)
                         / -geometry.ShipRequiredRateMetersPerSecond;
                     if (secondsToOpen <= config.ShipForecastMinutes * 60.0)
+                    {
                         jumpWindow.OpenSecondsFromNow = Math.Max(0.0, secondsToOpen);
+                        jumpWindow.Found = true;
+                        if (secondsToOpen <= 10.0)
+                            jumpWindow.IsOpenNow = true;
+                    }
                     else
                         jumpWindow.Found = false;
                 }
-                else if (jumpWindow.IsOpenNow && geometry.HasShipTrajectory
-                    && geometry.ShipRequiredRateMetersPerSecond > 0.0)
+                else if (jumpWindow.IsOpenNow)
                 {
-                    double secondsToClose = (jumpInfo.RangeMeters - requiredJumpDistance)
-                        / geometry.ShipRequiredRateMetersPerSecond;
-                    if (secondsToClose <= config.ShipForecastMinutes * 60.0)
+                    if (geometry.HasShipTrajectory
+                        && geometry.ShipRequiredRateMetersPerSecond > 0.0)
                     {
-                        jumpWindow.CloseSecondsFromNow = Math.Max(0.0, secondsToClose);
-                        jumpWindow.HasClose = true;
+                        double secondsToClose = (jumpInfo.RangeMeters - requiredJumpDistance)
+                            / geometry.ShipRequiredRateMetersPerSecond;
+                        if (secondsToClose <= config.ShipForecastMinutes * 60.0)
+                        {
+                            jumpWindow.CloseSecondsFromNow = Math.Max(0.0, secondsToClose);
+                            jumpWindow.HasClose = true;
+                            jumpWindow.DurationSeconds = secondsToClose;
+                        }
                     }
+
+                    if (!jumpWindow.HasClose && geometry.HasShipTrajectory
+                        && geometry.ShipRequiredRateMetersPerSecond <= 0.0)
+                        jumpWindow.DurationSeconds = config.ShipForecastMinutes * 60.0;
                 }
             }
             else if (geometry.CanForecastShipPosition && jumpInfo.RangeMeters > 0)
@@ -386,7 +411,7 @@ namespace Boquetas.RssOrbitalNavigator
             if (horizonSeconds <= 1)
                 return result;
 
-            double step = Math.Max(10.0, Math.Min(120.0, horizonSeconds / 3000.0));
+            double step = Math.Max(10.0, horizonSeconds / 3000.0);
             double dBefore = DistanceAt(source, target, modelSeconds);
             double dCurrent = DistanceAt(source, target, modelSeconds + step);
 

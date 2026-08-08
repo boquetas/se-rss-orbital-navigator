@@ -150,6 +150,8 @@ namespace Boquetas.RssOrbitalNavigator
             public double ShipToTargetDistanceMeters;
             public double ShipRequiredRateMetersPerSecond;
             public bool HasShipTrajectory;
+            public bool HasMarginForecast;
+            public double SecondsToMarginChange;
             public string SourceDescription;
             public string TargetDescription;
             public string Warning;
@@ -162,6 +164,7 @@ namespace Boquetas.RssOrbitalNavigator
             public double OpenSecondsFromNow;
             public bool HasClose;
             public double CloseSecondsFromNow;
+            public double DurationSeconds;
         }
 
         private sealed class Snapshot

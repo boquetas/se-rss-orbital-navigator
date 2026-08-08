@@ -27,6 +27,7 @@ All game scripts must remain under:
 - The current body catalog is derived from the Trithorne Cluster `Config.xml` supplied during development.
 - `Nyph-Ea` is currently an approximation because the RSS sibling-body hierarchy needs dedicated handling.
 - Jump geometry is an estimate and assumes favorable radial alignment between source and target.
+- Long prediction horizons must use bounded sampling; do not add loops whose iteration count grows directly with horizon seconds.
 
 ## Jump-window behavior
 
@@ -54,6 +55,16 @@ Before changing orbital math or timing:
 6. Review the Space Engineers log for `[RSS Orbital Navigator]` errors.
 
 Do not claim successful compilation unless tested against the installed Space Engineers/Torch assemblies.
+
+### Local compilation
+
+When local game compilation is available, compile before claiming a runtime change is valid:
+
+1. Locate the installed Space Engineers assemblies, normally under the Steam installation's `Bin64` directory. At minimum, reference `Sandbox.Game.dll`, `Sandbox.Common.dll`, `VRage.dll`, `VRage.Game.dll`, `VRage.Library.dll`, and `VRage.Math.dll`; add `SpaceEngineers.Game.dll` when the source uses game-specific APIs.
+2. Compile every `.cs` file under `Data/Scripts/RSSOrbitalNavigator/` together as one library. Do not compile individual partial files separately.
+3. Use the installed compiler/toolchain compatible with the game's supported C# version. Do not substitute a modern language version that the game loader cannot parse.
+4. Treat any compiler error as blocking: fix it, recompile, and only then deploy to `/mnt/c/Users/krateria/AppData/Roaming/SpaceEngineers/Mods/RSSOrbitalNavigator`.
+5. Record the exact compiler command and assembly paths in the task summary. Warnings from unrelated workshop mods do not count as RSS Orbital Navigator compilation success.
 
 ## Release Procedure
 

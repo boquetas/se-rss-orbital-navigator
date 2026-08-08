@@ -1,4 +1,4 @@
-# RSS Orbital Navigator 0.9.2
+# RSS Orbital Navigator 0.10.0
 
 Session mod for Space Engineers worlds using the Trithorne Cluster RSS configuration.
 
@@ -44,7 +44,7 @@ This provides two distinct navigation views:
 - Planetary mode: `Source > Target`, using the logical planet-to-planet route and configured departure/arrival allowances.
 - Deep-space RSS-position mode: `SHIP > Target`, using the current logical ship-to-target distance and Jump Drive reachability.
 
-After two RSS position samples, deep-space mode can estimate short-horizon approach and opening/closing behavior using `ShipForecastMinutes`.
+After two RSS position samples, deep-space mode can estimate short-horizon approach and opening/closing behavior using `ShipForecastMinutes`. When a direct jump is out of range, the dashboard reports the number of full-range jumps required and the distance threshold for reducing that count.
 
 ### SourceRadiusMode
 
@@ -68,9 +68,11 @@ After two RSS position samples, deep-space mode can estimate short-horizon appro
 
 ## LCD display
 
-`DisplayMode=Dashboard` uses a responsive sprite dashboard with a dark navigation-console layout. It adapts between wide cockpit screens and square LCDs and shows the route, estimated jump, available range, jump-window timing, relative motion, drive readiness and charge.
+`DisplayMode=Dashboard` uses a responsive sprite dashboard with a dark navigation-console layout. It adapts between wide cockpit screens and square LCDs and shows the route, estimated jump, available range, jump-window timing and duration, relative motion, drive readiness and charge. Forecast-bound window durations use `>` to distinguish a lower bound from an exact close time.
 
 Set `DisplayMode=Text` to use the detailed legacy text report. Dashboard mode scales automatically to the surface dimensions, and `FontSize` can reduce its typography without changing the card layout. The default and dashboard maximum is `0.55`; cockpit surfaces may work better around `0.35` to `0.45`. Text mode continues to accept larger values.
+
+`PredictionHours` accepts values from `0.25` through `60000`. Long planetary forecasts retain a 60-second scan for the first 48 hours and use bounded coarse sampling beyond that period.
 
 ### Physical route controls
 
@@ -149,3 +151,21 @@ The `develop` workflow updates the prerelease `develop-latest`. The `main` workf
 The session component is split across partial class files under `Data/Scripts/RSSOrbitalNavigator` so each source file remains manageable. Space Engineers compiles all `.cs` files in that script directory together.
 
 `SteamWorkshopDescription.txt` contains the formatted Workshop page description and should be updated with user-facing feature changes.
+
+## Local Workshop Publishing
+
+The existing Workshop item is `3774648307`. After preparing and testing a release locally, publish it with SteamCMD:
+
+```bash
+STEAMCMD=/path/to/steamcmd ./scripts/publish-workshop.sh
+```
+
+The script copies only `Data/` into a temporary Workshop content directory and uses `SteamWorkshopDescription.txt` as the item description. It asks for Steam credentials and confirmation at runtime; credentials are never stored in the repository. Use `--dry-run` to inspect the generated Workshop VDF without uploading:
+
+```bash
+./scripts/publish-workshop.sh --dry-run
+```
+
+For the first upload on an account, Steam Guard may require an interactive code. The script updates the configured existing item and does not create a new Workshop item.
+
+Install SteamCMD separately in WSL, or point `STEAMCMD` at an existing executable. The script passes only the account name; SteamCMD itself requests the password and Steam Guard code interactively.
