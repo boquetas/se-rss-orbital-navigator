@@ -113,7 +113,7 @@ namespace Boquetas.RssOrbitalNavigator
                 !snapshot.Geometry.IsShipPositionKnown ? DashboardMuted
                     : (range > 0.0 && marginMeters >= 0.0 ? accent : DashboardDanger));
             AddText(frame, range > 0.0
-                    ? (snapshot.Geometry.IsShipPositionKnown ? FormatMargin(marginMeters) : "REFERENCE ONLY")
+                    ? (snapshot.Geometry.IsShipPositionKnown ? FormatMarginWithForecast(marginMeters, snapshot.Geometry) : "REFERENCE ONLY")
                     : "NO USABLE JUMP RANGE",
                 left + new Vector2(12f, 84f) * unit, 0.48f * fontUnit,
                 !snapshot.Geometry.IsShipPositionKnown ? DashboardMuted
@@ -142,7 +142,7 @@ namespace Boquetas.RssOrbitalNavigator
                 0.48f * fontUnit, DashboardMuted, TextAlignment.RIGHT);
 
             AddCard(frame, right, new Vector2(rightWidth, contentHeight), unit);
-            DrawWindowSummary(frame, right, rightWidth, snapshot, accent, unit, fontUnit);
+            DrawWindowSummary(frame, right, rightWidth, config, snapshot, accent, unit, fontUnit);
             DrawDriveSummary(frame, right + new Vector2(0f, contentHeight * 0.51f), rightWidth,
                 contentHeight * 0.49f, snapshot, accent, unit, fontUnit);
 
@@ -190,7 +190,7 @@ namespace Boquetas.RssOrbitalNavigator
                 !snapshot.Geometry.IsShipPositionKnown ? DashboardMuted
                     : (range > 0.0 && marginMeters >= 0.0 ? accent : DashboardDanger));
             AddText(frame, range > 0.0
-                    ? (snapshot.Geometry.IsShipPositionKnown ? FormatMargin(marginMeters) : "REFERENCE ONLY")
+                    ? (snapshot.Geometry.IsShipPositionKnown ? FormatMarginWithForecast(marginMeters, snapshot.Geometry) : "REFERENCE ONLY")
                     : "NO USABLE JUMP RANGE",
                 cursor + new Vector2(12f, 96f) * unit, 0.46f * fontUnit,
                 !snapshot.Geometry.IsShipPositionKnown ? DashboardMuted
@@ -212,7 +212,7 @@ namespace Boquetas.RssOrbitalNavigator
 
             cursor.Y += 76f * unit;
             AddCard(frame, cursor, new Vector2(width, 92f * unit), unit);
-            DrawWindowSummary(frame, cursor, width, snapshot, accent, unit, fontUnit);
+            DrawWindowSummary(frame, cursor, width, config, snapshot, accent, unit, fontUnit);
 
             cursor.Y += 102f * unit;
             AddCard(frame, cursor, new Vector2(width, 82f * unit), unit);
@@ -228,7 +228,7 @@ namespace Boquetas.RssOrbitalNavigator
         }
 
         private static void DrawWindowSummary(MySpriteDrawFrame frame, Vector2 topLeft, float width,
-            Snapshot snapshot, Color accent, float unit, float fontUnit)
+            PanelConfig config, Snapshot snapshot, Color accent, float unit, float fontUnit)
         {
             AddText(frame, "JUMP WINDOW", topLeft + new Vector2(12f, 10f) * unit,
                 0.5f * fontUnit, DashboardMuted, TextAlignment.LEFT);
@@ -251,21 +251,26 @@ namespace Boquetas.RssOrbitalNavigator
                 if (snapshot.JumpWindow.IsOpenNow)
                 {
                     state = "CURRENTLY REACHABLE";
-                    detail = snapshot.JumpWindow.HasClose
-                        ? "CLOSES IN " + FormatDashboardDuration(snapshot.JumpWindow.CloseSecondsFromNow)
-                        : "CURRENT SHIP-TO-TARGET CHECK";
+                    if (snapshot.JumpWindow.HasClose)
+                        detail = "OPEN " + FormatDashboardDuration(snapshot.JumpWindow.CloseSecondsFromNow)
+                            + " REM / " + FormatDashboardDuration(snapshot.JumpWindow.DurationSeconds) + " TOTAL";
+                    else if (snapshot.JumpWindow.DurationSeconds > 0.0)
+                        detail = "OPEN > " + FormatDashboardDuration(snapshot.JumpWindow.DurationSeconds)
+                            + " FORECAST";
+                    else
+                        detail = "CURRENT SHIP-TO-TARGET CHECK";
                     stateColor = accent;
                 }
                 else if (snapshot.Geometry.HasShipTrajectory && snapshot.JumpWindow.Found)
                 {
                     state = "OPENS IN " + FormatDashboardDuration(snapshot.JumpWindow.OpenSecondsFromNow);
-                    detail = "SHIP TRAJECTORY FORECAST";
+                    detail = "SHIP TRAJECTORY: " + FormatShipForecastStatus(snapshot.Geometry);
                     stateColor = accent;
                 }
                 else
                 {
-                    state = "OUT OF RANGE";
-                    detail = "CURRENT SHIP-TO-TARGET CHECK";
+                    state = FormatStagedJumpState(snapshot);
+                    detail = FormatStagedJumpDetail(snapshot);
                     stateColor = DashboardDanger;
                 }
             }
@@ -283,9 +288,14 @@ namespace Boquetas.RssOrbitalNavigator
             else if (snapshot.JumpWindow.IsOpenNow)
             {
                 state = "OPEN NOW";
-                detail = snapshot.JumpWindow.HasClose
-                    ? "CLOSES IN " + FormatDashboardDuration(snapshot.JumpWindow.CloseSecondsFromNow)
-                    : "NO CLOSE IN FORECAST";
+                if (snapshot.JumpWindow.HasClose)
+                    detail = "OPEN " + FormatDashboardDuration(snapshot.JumpWindow.CloseSecondsFromNow)
+                        + " REM / " + FormatDashboardDuration(snapshot.JumpWindow.DurationSeconds) + " TOTAL";
+                else if (snapshot.JumpWindow.DurationSeconds > 0.0)
+                    detail = "OPEN > " + FormatDashboardDuration(snapshot.JumpWindow.DurationSeconds)
+                        + " FORECAST";
+                else
+                    detail = "NO CLOSE IN FORECAST";
                 stateColor = accent;
             }
             else
@@ -301,6 +311,48 @@ namespace Boquetas.RssOrbitalNavigator
                 0.68f * fontUnit, stateColor, TextAlignment.LEFT);
             AddText(frame, detail, topLeft + new Vector2(12f, 61f) * unit,
                 0.44f * fontUnit, DashboardMuted, TextAlignment.LEFT);
+            DrawWindowTimeline(frame, topLeft + new Vector2(12f, 79f) * unit,
+                width - 24f * unit, config, snapshot, accent, unit, fontUnit);
+        }
+
+        private static void DrawWindowTimeline(MySpriteDrawFrame frame, Vector2 topLeft, float width,
+            PanelConfig config, Snapshot snapshot, Color accent, float unit, float fontUnit)
+        {
+            double horizon = snapshot.Geometry.UsesLogicalShipPosition
+                ? config.ShipForecastMinutes * 60.0 : config.PredictionHours * 3600.0;
+            if (horizon <= 0.0)
+                return;
+
+            double open = snapshot.JumpWindow.IsOpenNow
+                ? 0.0 : snapshot.JumpWindow.OpenSecondsFromNow;
+            double close = snapshot.JumpWindow.HasClose
+                ? snapshot.JumpWindow.CloseSecondsFromNow
+                : (snapshot.JumpWindow.IsOpenNow && snapshot.JumpWindow.DurationSeconds > 0.0
+                    ? snapshot.JumpWindow.DurationSeconds : horizon);
+            double scale = Math.Max(horizon, Math.Max(open, close));
+            float lineY = topLeft.Y + 3f * unit;
+            float startX = topLeft.X;
+            float endX = topLeft.X + width;
+
+            AddRectangle(frame, new Vector2((startX + endX) * 0.5f, lineY),
+                new Vector2(width, 3f * unit), DashboardPanelBright);
+            if (snapshot.JumpWindow.Found)
+            {
+                float openX = startX + width * (float)Math.Max(0.0, Math.Min(1.0, open / scale));
+                float closeX = startX + width * (float)Math.Max(0.0, Math.Min(1.0, close / scale));
+                AddRectangle(frame, new Vector2((openX + closeX) * 0.5f, lineY),
+                    new Vector2(Math.Max(3f * unit, closeX - openX), 5f * unit), accent);
+                AddRectangle(frame, new Vector2(openX, lineY),
+                    new Vector2(3f * unit, 9f * unit), DashboardText);
+                if (snapshot.JumpWindow.HasClose)
+                    AddRectangle(frame, new Vector2(closeX, lineY),
+                        new Vector2(3f * unit, 9f * unit), DashboardDanger);
+            }
+
+            AddText(frame, "NOW", new Vector2(startX, topLeft.Y + 8f * unit),
+                0.3f * fontUnit, DashboardMuted, TextAlignment.LEFT);
+            AddText(frame, "FORECAST", new Vector2(endX, topLeft.Y + 8f * unit),
+                0.3f * fontUnit, DashboardMuted, TextAlignment.RIGHT);
         }
 
         private static void DrawDriveSummary(MySpriteDrawFrame frame, Vector2 topLeft, float width, float height,
@@ -442,6 +494,52 @@ namespace Boquetas.RssOrbitalNavigator
             if (marginMeters >= 0.0)
                 return FormatDashboardDistance(marginMeters) + " RESERVE";
             return FormatDashboardDistance(-marginMeters) + " SHORT";
+        }
+
+        private static string FormatMarginWithForecast(double marginMeters, NavigationGeometry geometry)
+        {
+            string text = FormatMargin(marginMeters);
+            if (geometry.HasMarginForecast)
+                text += (marginMeters >= 0.0 ? " LEFT " : " IN ")
+                    + FormatDashboardDuration(geometry.SecondsToMarginChange);
+            return text;
+        }
+
+        private static string FormatShipForecastStatus(NavigationGeometry geometry)
+        {
+            return geometry.HasShipTrajectory ? "MEASURED RATE / PROJECTED" : "NO FORECAST";
+        }
+
+        private static string FormatStagedJumpState(Snapshot snapshot)
+        {
+            int jumps = GetRequiredJumpCount(snapshot);
+            return jumps > 1 ? jumps.ToString(CultureInfo.InvariantCulture) + " JUMPS REQUIRED" : "OUT OF RANGE";
+        }
+
+        private static string FormatStagedJumpDetail(Snapshot snapshot)
+        {
+            int jumps = GetRequiredJumpCount(snapshot);
+            if (jumps <= 1 || snapshot.JumpInfo.RangeMeters <= 0.0)
+                return "CURRENT SHIP-TO-TARGET CHECK";
+
+            double nextThreshold = (jumps - 1) * snapshot.JumpInfo.RangeMeters;
+            string target = (jumps - 1).ToString(CultureInfo.InvariantCulture) + " HOPS <= "
+                + FormatDashboardDistance(nextThreshold);
+            double rate = snapshot.Geometry.ShipRequiredRateMetersPerSecond;
+            if (snapshot.Geometry.HasShipTrajectory && rate < 0.0)
+            {
+                double seconds = (snapshot.RequiredJumpMeters - nextThreshold) / -rate;
+                if (seconds > 0.0)
+                    return target + " IN " + FormatDashboardDuration(seconds);
+            }
+            return target;
+        }
+
+        private static int GetRequiredJumpCount(Snapshot snapshot)
+        {
+            if (snapshot.JumpInfo.RangeMeters <= 0.0 || snapshot.RequiredJumpMeters <= 0.0)
+                return 0;
+            return Math.Max(1, (int)Math.Ceiling(snapshot.RequiredJumpMeters / snapshot.JumpInfo.RangeMeters));
         }
 
         private static string FormatMotion(Snapshot snapshot)

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.10.0
+- Dashboard jump windows now report the remaining and total duration when a closing boundary is predicted, or a clearly labeled forecast lower bound when it is not.
+- Added a compact jump-window timeline and range-margin countdowns for measured deep-space trajectory forecasts.
+- Deep-space routes beyond direct Jump Drive range now report the number of full-range jumps required and the threshold for reducing that count.
+- Increased the supported planetary forecast horizon to 60000 hours while retaining bounded sampling and a 48-hour high-resolution scan for nearby crossings.
+
 ## 0.9.2
 - Fixed explicit compilation against the installed Space Engineers assemblies by importing the `VRage.ModAPI` entity interfaces used by the RSS API bridge.
 

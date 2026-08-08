@@ -59,7 +59,10 @@ namespace Boquetas.RssOrbitalNavigator
             if (rangeMeters <= 0 || horizonSeconds <= 1)
                 return result;
 
-            double step = Math.Max(10.0, Math.Min(60.0, horizonSeconds / 5000.0));
+            // Resolve the next transition precisely, then retain bounded work for distant forecasts.
+            const double preciseHorizonSeconds = 48.0 * 3600.0;
+            const double preciseStepSeconds = 60.0;
+            double longStep = Math.Max(60.0, (horizonSeconds - preciseHorizonSeconds) / 5000.0);
             double previousOffset = 0;
             double previousDistance = RequiredJumpDistance(DistanceAt(source, target, modelSeconds), geometry);
             bool inside = previousDistance <= rangeMeters;
@@ -70,7 +73,8 @@ namespace Boquetas.RssOrbitalNavigator
                 result.OpenSecondsFromNow = 0;
             }
 
-            for (double offset = step; offset <= horizonSeconds; offset += step)
+            for (double offset = Math.Min(preciseStepSeconds, horizonSeconds);
+                offset <= horizonSeconds;)
             {
                 double currentDistance = RequiredJumpDistance(
                     DistanceAt(source, target, modelSeconds + offset), geometry);
@@ -81,17 +85,30 @@ namespace Boquetas.RssOrbitalNavigator
                     result.Found = true;
                     result.OpenSecondsFromNow = RefineCrossing(source, target, modelSeconds,
                         previousOffset, offset, rangeMeters, geometry);
+                    if (result.OpenSecondsFromNow <= 10.0)
+                        result.IsOpenNow = true;
                 }
                 else if (inside && !currentInside && result.Found)
                 {
                     result.CloseSecondsFromNow = RefineCrossing(source, target, modelSeconds,
                         previousOffset, offset, rangeMeters, geometry);
                     result.HasClose = true;
+                    result.DurationSeconds = result.CloseSecondsFromNow - result.OpenSecondsFromNow;
+                    if (result.DurationSeconds < 0.0)
+                        result.DurationSeconds = 0.0;
                     return result;
                 }
 
                 inside = currentInside;
                 previousOffset = offset;
+                offset += offset < preciseHorizonSeconds ? preciseStepSeconds : longStep;
+            }
+
+            if (result.IsOpenNow && result.Found && !result.HasClose)
+            {
+                result.DurationSeconds = horizonSeconds - result.OpenSecondsFromNow;
+                if (result.DurationSeconds < 0.0)
+                    result.DurationSeconds = 0.0;
             }
 
             return result;

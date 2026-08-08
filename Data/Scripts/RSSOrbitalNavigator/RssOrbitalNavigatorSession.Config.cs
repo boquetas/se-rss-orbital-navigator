@@ -161,7 +161,7 @@ namespace Boquetas.RssOrbitalNavigator
 
                 config.SurfaceIndex = Math.Max(0, config.SurfaceIndex);
                 config.FontSize = Math.Max(0.1f, Math.Min(10f, config.FontSize));
-                config.PredictionHours = Math.Max(0.25, Math.Min(720.0, config.PredictionHours));
+                config.PredictionHours = Math.Max(0.25, Math.Min(60000.0, config.PredictionHours));
                 config.ShipForecastMinutes = Math.Max(1.0, Math.Min(720.0, config.ShipForecastMinutes));
                 config.PanelUpdateRadiusKm = Math.Max(0.1, Math.Min(100.0, config.PanelUpdateRadiusKm));
                 config.JumpRangeKm = Math.Max(0, config.JumpRangeKm);
